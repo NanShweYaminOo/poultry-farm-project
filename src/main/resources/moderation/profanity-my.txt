@@ -1,0 +1,8 @@
+# Placeholder Burmese (Myanmar) profanity/toxicity word list.
+# One term per line, matched via substring since Burmese script has no
+# whitespace-delimited word boundaries the way English does.
+#
+# This file intentionally ships EMPTY. Populate it with a vetted Burmese
+# wordlist -- ideally reviewed by a native speaker, or sourced from a
+# moderation API/service -- before relying on this filter for Burmese
+# content. Until populated, Burmese-language inputs will not be screened.

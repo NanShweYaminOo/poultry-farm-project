@@ -1,0 +1,23 @@
+<%@ page pageEncoding="UTF-8" %>
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <button class="menu-toggle" aria-label="Toggle menu"><i class="bi bi-list"></i></button>
+    <div class="topbar-title">
+      <h1 class="i18n" data-my="${topbarTitleMy}" data-en="${topbarTitleEn}">${topbarTitleMy}</h1>
+      <p class="i18n" data-my="${topbarSubMy}" data-en="${topbarSubEn}">${topbarSubMy}</p>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <div class="lang-switch">
+      <button data-lang="my">MY</button>
+      <button data-lang="en">EN</button>
+    </div>
+    <a href="<c:url value='/admin/profile'/>" class="admin-profile">
+      <div class="avatar">SA</div>
+      <div>
+        <div class="name">Super Admin</div>
+        <div class="role i18n" data-my="စီမံခန့်ခွဲသူ" data-en="Administrator">စီမံခန့်ခွဲသူ</div>
+      </div>
+    </a>
+  </div>
+</header>

@@ -1,0 +1,68 @@
+<%@ page pageEncoding="UTF-8" %>
+<aside class="sidebar" id="adminSidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+    <div>
+      <div class="brand-name">Broiler Admin</div>
+      <div class="brand-tag i18n" data-my="ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု" data-en="Poultry Farm Management">ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link ${currentPage == 'dashboard' ? 'active' : ''}" href="<c:url value='/admin/dashboard'/>">
+      <i class="bi bi-speedometer2"></i>
+      <span class="i18n" data-my="ဒက်ရှ်ဘုတ်" data-en="Dashboard">ဒက်ရှ်ဘုတ်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'posts' ? 'active' : ''}" href="<c:url value='/admin/posts'/>">
+      <i class="bi bi-megaphone-fill"></i>
+      <span class="i18n" data-my="အသုံးပြုသူများ၏ ပို့စ်များ" data-en="User Posts">အသုံးပြုသူများ၏ ပို့စ်များ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'users' ? 'active' : ''}" href="<c:url value='/admin/users'/>">
+      <i class="bi bi-people-fill"></i>
+      <span class="i18n" data-my="အသုံးပြုသူများ" data-en="Users">အသုံးပြုသူများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'group-chats' ? 'active' : ''}" href="<c:url value='/admin/group-chats'/>">
+      <i class="bi bi-chat-dots-fill"></i>
+      <span class="i18n" data-my="အဖွဲ့စကားပြောများ" data-en="Group Chats">အဖွဲ့စကားပြောများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'feedback' ? 'active' : ''}" href="<c:url value='/admin/feedback'/>">
+      <i class="bi bi-chat-square-text-fill"></i>
+      <span class="i18n" data-my="အကြံပြုချက်များ" data-en="Feedback">အကြံပြုချက်များ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'breeds' ? 'active' : ''}" href="<c:url value='/admin/breeds'/>">
+      <i class="bi bi-egg-fried"></i>
+      <span class="i18n" data-my="ကြက်မျိုးရင်းများ" data-en="Breeds">ကြက်မျိုးရင်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'diseases' ? 'active' : ''}" href="<c:url value='/admin/diseases'/>">
+      <i class="bi bi-virus"></i>
+      <span class="i18n" data-my="ရောဂါများ" data-en="Diseases">ရောဂါများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'faqs' ? 'active' : ''}" href="<c:url value='/admin/faqs'/>">
+      <i class="bi bi-question-circle-fill"></i>
+      <span class="i18n" data-my="မေးလေ့ရှိသောမေးခွန်းများ" data-en="FAQs">မေးလေ့ရှိသောမေးခွန်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'articles' ? 'active' : ''}" href="<c:url value='/admin/articles'/>">
+      <i class="bi bi-journal-richtext"></i>
+      <span class="i18n" data-my="ဗဟုသုတဆောင်းပါးများ" data-en="Articles">ဗဟုသုတဆောင်းပါးများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'logs' ? 'active' : ''}" href="<c:url value='/admin/logs'/>">
+      <i class="bi bi-clock-history"></i>
+      <span class="i18n" data-my="စနစ်မှတ်တမ်းများ" data-en="System Logs">စနစ်မှတ်တမ်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'help' ? 'active' : ''}" href="<c:url value='/admin/help'/>">
+      <i class="bi bi-life-preserver"></i>
+      <span class="i18n" data-my="အကူအညီ" data-en="Help">အကူအညီ</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="nav-link ${currentPage == 'profile' ? 'active' : ''}" href="<c:url value='/admin/profile'/>">
+      <i class="bi bi-person-circle"></i>
+      <span class="i18n" data-my="ကျွန်ုပ်၏ပရိုဖိုင်" data-en="My Profile">ကျွန်ုပ်၏ပရိုဖိုင်</span>
+    </a>
+    <a class="nav-link nav-link-logout" href="<c:url value='/admin/login'/>">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="i18n" data-my="ထွက်မည်" data-en="Logout">ထွက်မည်</span>
+    </a>
+  </div>
+</aside>

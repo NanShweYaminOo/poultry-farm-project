@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Broiler Farming System — Admin Login
+   Uses the shared Classic Emerald & Gold variables from admin-theme.css
+   ========================================================================== */
+
+.login-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(212,175,55,.12), transparent 45%),
+    radial-gradient(circle at 85% 85%, rgba(212,175,55,.10), transparent 40%),
+    linear-gradient(160deg,var(--emerald-950) 0%,var(--emerald-900) 45%,var(--emerald-800) 100%);
+  position:relative;
+}
+
+.login-lang{
+  position:absolute;
+  top:24px;
+  right:24px;
+}
+
+.login-card{
+  width:100%;
+  max-width:400px;
+  background:var(--white);
+  border-radius:var(--radius);
+  box-shadow:0 24px 60px rgba(4,30,24,.45);
+  overflow:hidden;
+  position:relative;
+}
+.login-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg,var(--emerald-600),var(--gold-500),var(--emerald-600));
+}
+
+.login-card-body{padding:40px 36px 34px;}
+
+.login-brand{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  margin-bottom:26px;
+}
+.login-brand .brand-icon{
+  width:64px;height:64px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-500),var(--gold-700));
+  color:var(--emerald-950);
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;
+  box-shadow:var(--shadow-gold);
+  border:3px solid var(--emerald-900);
+  margin-bottom:14px;
+}
+.login-brand h1{
+  margin:0;
+  font-size:21px;
+  color:var(--emerald-900);
+}
+.login-brand p{
+  margin:4px 0 0;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.form-group{margin-bottom:18px;}
+.form-group label{
+  display:block;
+  font-size:12.5px;
+  font-weight:700;
+  color:var(--emerald-800);
+  margin-bottom:7px;
+  letter-spacing:.02em;
+}
+.input-wrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  border:1.5px solid var(--line);
+  border-radius:var(--radius-sm);
+  padding:11px 14px;
+  background:var(--cream);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.input-wrap:focus-within{
+  border-color:var(--gold-500);
+  box-shadow:0 0 0 3px rgba(212,175,55,.18);
+  background:var(--white);
+}
+.input-wrap i{color:var(--emerald-700);font-size:15px;flex-shrink:0;}
+.input-wrap input{
+  border:none;outline:none;background:transparent;
+  width:100%;font-size:14px;color:var(--ink);
+  font-family:inherit;
+}
+.input-wrap input::placeholder{color:#a3ab9f;}
+
+.login-btn{
+  width:100%;
+  justify-content:center;
+  padding:12px 16px;
+  font-size:14.5px;
+  border-radius:var(--radius-sm);
+  margin-top:6px;
+  box-shadow:var(--shadow-gold);
+}
+.login-btn:disabled{
+  opacity:.85;
+  cursor:not-allowed;
+}
+
+.spinner{
+  width:16px;height:16px;
+  border:2.5px solid rgba(4,30,24,.25);
+  border-top-color:var(--emerald-950);
+  border-radius:50%;
+  display:inline-block;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.login-footnote{
+  text-align:center;
+  margin-top:22px;
+  font-size:11.5px;
+  color:var(--muted);
+}
+
+.login-alert{
+  display:none;
+  align-items:center;
+  gap:8px;
+  background:var(--emerald-100);
+  color:var(--emerald-800);
+  border:1px solid var(--emerald-500);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  margin-bottom:18px;
+}
+.login-alert.show{display:flex;}

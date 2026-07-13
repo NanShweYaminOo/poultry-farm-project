@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Broiler Farming System — Public Register/Login extras
+   Builds on the shared variables + .login-shell/.login-card/.form-group
+   styles from admin-theme.css and login.css.
+   ========================================================================== */
+
+.register-card{ max-width:440px; }
+.register-card .login-card-body{ max-height:88vh; overflow-y:auto; }
+
+.account-type-group{
+  display:flex;
+  gap:10px;
+}
+.account-type-option{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  padding:14px 10px;
+  border:1.5px solid var(--line);
+  border-radius:var(--radius-sm);
+  background:var(--cream);
+  color:var(--muted);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:border-color .15s ease, box-shadow .15s ease, color .15s ease, background .15s ease;
+}
+.account-type-option i{ font-size:20px; }
+.account-type-option:hover{ border-color:var(--gold-500); }
+.account-type-option.active{
+  border-color:var(--gold-500);
+  background:var(--white);
+  color:var(--emerald-800);
+  box-shadow:0 0 0 3px rgba(212,175,55,.18);
+}
+
+.login-alert.success{
+  background:var(--emerald-100);
+  color:var(--emerald-800);
+  border-color:var(--emerald-500);
+}

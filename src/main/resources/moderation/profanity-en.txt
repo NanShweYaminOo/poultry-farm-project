@@ -1,0 +1,9 @@
+# Placeholder English profanity/toxicity word list for MVP demo purposes.
+# One term per line, case-insensitive, matched on whole-word boundaries.
+# Replace this with a vetted moderation word list (or route through a
+# third-party moderation API) before relying on this in production.
+idiot
+stupid
+moron
+dumbass
+shut up

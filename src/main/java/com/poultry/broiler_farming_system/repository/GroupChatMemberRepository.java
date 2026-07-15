@@ -11,4 +11,8 @@ public interface GroupChatMemberRepository extends JpaRepository<GroupChatMember
     long countByIdGroupChatId(Long groupChatId);
 
     List<GroupChatMember> findByIdGroupChatId(Long groupChatId);
+
+    List<GroupChatMember> findByIdUserId(Long userId);
+
+    void deleteByIdUserId(Long userId);
 }

@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/payment-transactions")
@@ -18,12 +21,19 @@ public class PaymentTransactionController {
     private final PaymentTransactionService paymentTransactionService;
 
     // userId is the authenticated caller -- see CreatePaymentTransactionRequest.
-    // e.g. { "batchId": 12, "paymentType": "BATCH_REGISTRATION", "screenshotUrl": "https://..." }
-    @PostMapping
+    // multipart/form-data: batchId, paymentType fields + a "screenshot" image file part.
+    @PostMapping(consumes = "multipart/form-data")
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentTransactionResponse create(
-            @AuthenticationPrincipal UserPrincipal principal, @RequestBody CreatePaymentTransactionRequest request) {
-        return paymentTransactionService.createTransaction(principal.getId(), request);
+            @AuthenticationPrincipal UserPrincipal principal,
+            @ModelAttribute CreatePaymentTransactionRequest request,
+            @RequestParam("screenshot") MultipartFile screenshot) {
+        return paymentTransactionService.createTransaction(principal.getId(), request, screenshot);
+    }
+
+    @GetMapping("/me")
+    public List<PaymentTransactionResponse> listMine(@AuthenticationPrincipal UserPrincipal principal) {
+        return paymentTransactionService.listMyTransactions(principal.getId());
     }
 
     // adminId is the authenticated caller (SecurityConfig requires ROLE_ADMIN

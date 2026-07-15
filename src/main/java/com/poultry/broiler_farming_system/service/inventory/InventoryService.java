@@ -7,8 +7,9 @@ import java.util.List;
 
 public interface InventoryService {
 
-    // Adds stock, creating the (batch, itemName) row on first use.
-    InventoryItem restock(Long batchId, String itemName, String unit, BigDecimal quantityToAdd);
+    // Adds stock, creating the (batch, itemName) row on first use. callerId
+    // must own the batch (or be an Admin).
+    InventoryItem restock(Long callerId, Long batchId, String itemName, String unit, BigDecimal quantityToAdd);
 
     /**
      * Subtracts usage from the batch's running stock for that item. If no
@@ -16,9 +17,13 @@ public interface InventoryService {
      * always recorded even when nothing was formally stocked in first -- the
      * quantity is then allowed to go negative as a visible "needs restock"
      * signal rather than blocking the (already-happened) real-world action
-     * that triggered the deduction.
+     * that triggered the deduction. Not exposed by any controller -- only
+     * called internally by MedicineEstimationServiceImpl.completeTask(),
+     * which has already verified ownership of the alarm's batch, so this
+     * intentionally has no ownership check of its own.
      */
     InventoryItem deduct(Long batchId, String itemName, BigDecimal quantityToDeduct);
 
-    List<InventoryItem> listForBatch(Long batchId);
+    // callerId must own the batch (or be an Admin).
+    List<InventoryItem> listForBatch(Long callerId, Long batchId);
 }

@@ -29,6 +29,14 @@
       <i class="bi bi-chat-square-text-fill"></i>
       <span class="i18n" data-my="အကြံပြုချက်များ" data-en="Feedback">အကြံပြုချက်များ</span>
     </a>
+    <a class="nav-link ${currentPage == 'payments' ? 'active' : ''}" href="<c:url value='/admin/payments'/>">
+      <i class="bi bi-credit-card-fill"></i>
+      <span class="i18n" data-my="ငွေပေးချေမှုများ" data-en="Payments">Payments</span>
+    </a>
+    <a class="nav-link ${currentPage == 'account-upgrades' ? 'active' : ''}" href="<c:url value='/admin/account-upgrades'/>">
+      <i class="bi bi-arrow-up-circle-fill"></i>
+      <span class="i18n" data-my="အဆင့်တင်ခြင်း တောင်းဆိုချက်များ" data-en="Upgrade Requests">Upgrade Requests</span>
+    </a>
     <a class="nav-link ${currentPage == 'breeds' ? 'active' : ''}" href="<c:url value='/admin/breeds'/>">
       <i class="bi bi-egg-fried"></i>
       <span class="i18n" data-my="ကြက်မျိုးရင်းများ" data-en="Breeds">ကြက်မျိုးရင်းများ</span>

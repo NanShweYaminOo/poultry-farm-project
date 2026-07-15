@@ -2,14 +2,13 @@ package com.poultry.broiler_farming_system.dto.groupchat;
 
 import java.time.LocalDateTime;
 
-public record AdminGroupChatSummaryResponse(
+// Farmer/Admin-facing "my groups" list -- trimmed down from
+// AdminGroupChatSummaryResponse (no createdBy fields; a member doesn't need
+// audit info, just enough to render a group list/sidebar).
+public record GroupChatSummaryResponse(
         Long id,
         String groupName,
-        Long createdById,
-        String createdByUsername,
-        LocalDateTime createdDate,
         long memberCount,
-        long messageCount,
         String lastMessagePreview,
         LocalDateTime lastMessageAt
 ) {

@@ -1,64 +1,17 @@
 /* ==========================================================================
    Broiler Farming System — Admin Frontend
-   Shared language switcher, mobile sidebar toggle and toast helper.
+   Session/auth/toast now delegate to the shared ApiClient (see
+   shared/assets/js/api.js, loaded just before this file in
+   fragments/scripts.jspf); this file adds the admin-specific extras:
+   profile display, language switch, mobile sidebar toggle. window.AdminUI
+   keeps its exact previous shape so every other admin page.js file is
+   unaffected.
    The sidebar/topbar markup itself lives in the JSP fragments
    (WEB-INF/jsp/admin/fragments/*.jsp) and is rendered server-side.
    ========================================================================== */
 
 (function () {
-  var TOKEN_KEY = 'admin_token';
-  var TOKEN_TYPE_KEY = 'admin_token_type';
-  var TOKEN_EXPIRES_KEY = 'admin_token_expires_at';
-  var USER_KEY = 'admin_user';
-
-  function getSession() {
-    var token = localStorage.getItem(TOKEN_KEY);
-    var expiresAt = Number(localStorage.getItem(TOKEN_EXPIRES_KEY) || 0);
-    if (!token || !expiresAt || Date.now() >= expiresAt) {
-      return null;
-    }
-    var user = null;
-    try {
-      user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-    } catch (e) {
-      user = null;
-    }
-    return { token: token, tokenType: localStorage.getItem(TOKEN_TYPE_KEY) || 'Bearer', user: user };
-  }
-
-  function clearSession() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(TOKEN_TYPE_KEY);
-    localStorage.removeItem(TOKEN_EXPIRES_KEY);
-    localStorage.removeItem(USER_KEY);
-  }
-
-  function requireSession() {
-    var session = getSession();
-    if (!session) {
-      clearSession();
-      window.location.href = '/admin/login';
-      return null;
-    }
-    return session;
-  }
-
-  // Attaches the stored JWT as an Authorization header; clears the
-  // session and bounces to login if the API rejects it as expired/invalid.
-  function authFetch(url, options) {
-    var session = getSession();
-    options = options || {};
-    options.headers = Object.assign({}, options.headers, session
-      ? { Authorization: session.tokenType + ' ' + session.token }
-      : {});
-    return fetch(url, options).then(function (response) {
-      if (response.status === 401) {
-        clearSession();
-        window.location.href = '/admin/login';
-      }
-      return response;
-    });
-  }
+  var client = window.ApiClient.create({ prefix: 'admin', loginPath: '/admin/login', toastId: 'adminToast' });
 
   function renderProfileFallback(session) {
     if (!session || !session.user) return;
@@ -73,7 +26,7 @@
 
   function initProfileDisplay(session) {
     if (!session || !session.user) return;
-    authFetch('/api/v1/users/me')
+    client.apiFetch('/api/v1/users/me')
       .then(function (response) {
         if (!response.ok) throw new Error('Failed to load profile');
         return response.json();
@@ -99,7 +52,7 @@
   function initLogout() {
     document.querySelectorAll('.nav-link-logout').forEach(function (link) {
       link.addEventListener('click', function () {
-        clearSession();
+        client.clearSession();
       });
     });
   }
@@ -137,29 +90,14 @@
   }
 
   window.AdminUI = {
-    getSession: getSession,
-    clearSession: clearSession,
-    authFetch: authFetch,
-    toast: function (myText, enText, icon) {
-      var el = document.getElementById('adminToast');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'adminToast';
-        el.className = 'toast';
-        document.body.appendChild(el);
-      }
-      var lang = document.documentElement.getAttribute('data-lang') || 'my';
-      el.innerHTML = '<i class="bi ' + (icon || 'bi-check-circle-fill') + '"></i><span>' + (lang === 'en' ? enText : myText) + '</span>';
-      el.classList.add('show');
-      clearTimeout(el._timer);
-      el._timer = setTimeout(function () {
-        el.classList.remove('show');
-      }, 2600);
-    }
+    getSession: client.getSession,
+    clearSession: client.clearSession,
+    authFetch: client.apiFetch,
+    toast: client.toast
   };
 
   document.addEventListener('DOMContentLoaded', function () {
-    var session = requireSession();
+    var session = client.requireSession();
     if (!session) return;
     initProfileDisplay(session);
     initLogout();

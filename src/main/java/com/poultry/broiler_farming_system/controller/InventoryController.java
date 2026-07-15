@@ -3,8 +3,10 @@ package com.poultry.broiler_farming_system.controller;
 import com.poultry.broiler_farming_system.dto.inventory.InventoryItemResponse;
 import com.poultry.broiler_farming_system.dto.inventory.RestockRequest;
 import com.poultry.broiler_farming_system.entity.InventoryItem;
+import com.poultry.broiler_farming_system.security.UserPrincipal;
 import com.poultry.broiler_farming_system.service.inventory.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,15 +19,17 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @PostMapping("/restock")
-    public InventoryItemResponse restock(@RequestBody RestockRequest request) {
+    public InventoryItemResponse restock(
+            @AuthenticationPrincipal UserPrincipal principal, @RequestBody RestockRequest request) {
         InventoryItem item = inventoryService.restock(
-                request.batchId(), request.itemName(), request.unit(), request.quantity());
+                principal.getId(), request.batchId(), request.itemName(), request.unit(), request.quantity());
         return toResponse(item);
     }
 
     @GetMapping("/batches/{batchId}")
-    public List<InventoryItemResponse> listForBatch(@PathVariable Long batchId) {
-        return inventoryService.listForBatch(batchId).stream().map(this::toResponse).toList();
+    public List<InventoryItemResponse> listForBatch(
+            @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long batchId) {
+        return inventoryService.listForBatch(principal.getId(), batchId).stream().map(this::toResponse).toList();
     }
 
     private InventoryItemResponse toResponse(InventoryItem item) {

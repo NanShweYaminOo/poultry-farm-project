@@ -55,7 +55,14 @@ public class PremiumExpiryCronJob {
             if (cycleEndDate != null && !today.isBefore(cycleEndDate)) {
                 log.info("Batch {} reached the end of its {}-day cycle (started {}); auto-completing.",
                         batch.getId(), batch.getCycleDurationDays(), batch.getStartDate());
-                batchService.stopBatch(batch.getId(), BatchStatus.COMPLETED);
+                // stopBatch() is ownership-checked; passing the batch's own
+                // farmer as the caller satisfies that trivially (a farmer
+                // always owns their own batch) while still going through the
+                // single choke point that also handles PAID->FREE demotion.
+                batchService.stopBatch(batch.getFarmer().getId(), batch.getId(), BatchStatus.COMPLETED);
+                // Only fired here (auto-completion), not from a farmer's own
+                // manual "Stop Batch" -- they already know they just clicked it.
+                notificationService.notifyBatchAutoCompleted(batch);
             }
         }
     }
@@ -65,9 +72,7 @@ public class PremiumExpiryCronJob {
         for (Batch batch : batches) {
             LocalDate cycleEndDate = cycleEndDate(batch);
             if (cycleEndDate != null && cycleEndDate.equals(warningTargetDate)) {
-                notificationService.notify(batch.getFarmer(),
-                        "Your batch '" + batch.getBatchName() + "' cycle ends in " + WARNING_DAYS_AHEAD
-                                + " days (" + cycleEndDate + ").");
+                notificationService.notifyBatchCycleEndingSoon(batch, cycleEndDate, WARNING_DAYS_AHEAD);
             }
         }
     }
@@ -78,8 +83,7 @@ public class PremiumExpiryCronJob {
         for (User user : usersWithExtension) {
             LocalDate expiryDate = user.getPostingExtensionExpiry().toLocalDate();
             if (expiryDate.equals(warningTargetDate)) {
-                notificationService.notify(user,
-                        "Your posting privilege expires in " + WARNING_DAYS_AHEAD + " days (" + expiryDate + ").");
+                notificationService.notifyPostingExtensionExpiringSoon(user, expiryDate, WARNING_DAYS_AHEAD);
             }
         }
         // No state to evict here: posting_extension_expiry is checked

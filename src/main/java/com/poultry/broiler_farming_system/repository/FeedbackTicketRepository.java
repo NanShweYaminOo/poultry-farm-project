@@ -8,4 +8,8 @@ import java.util.List;
 public interface FeedbackTicketRepository extends JpaRepository<FeedbackTicket, Long> {
 
     List<FeedbackTicket> findAllByOrderByCreatedDateDesc();
+
+    List<FeedbackTicket> findBySubmittedByIdOrderByCreatedDateDesc(Long submittedById);
+
+    void deleteBySubmittedById(Long submittedById);
 }

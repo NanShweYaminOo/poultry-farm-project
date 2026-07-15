@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<title>System Financial Audit Report</title>
+<style>
+  @page { size: A4; margin: 28px 32px; }
+  body { font-family: 'Noto Sans Myanmar', Helvetica, Arial, sans-serif; font-size: 11px; color: #1a1a1a; }
+  h1 { font-size: 18px; color: #1b4332; margin: 0 0 4px; }
+  .subtitle { font-size: 11px; color: #666; margin: 0 0 18px; }
+  .summary { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  .summary td { width: 33.3%; padding: 12px 16px; border: 1px solid #d8d8d8; }
+  .summary .label { font-size: 10px; color: #666; text-transform: uppercase; }
+  .summary .value { font-size: 18px; font-weight: bold; color: #1b4332; margin-top: 4px; }
+  h2 { font-size: 13px; color: #1b4332; border-bottom: 1.5px solid #c9a227; padding-bottom: 4px; margin: 22px 0 8px; }
+  table.data { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  table.data th { background: #eef0ec; text-align: left; padding: 6px 8px; font-size: 9.5px; text-transform: uppercase; color: #444; border-bottom: 1px solid #ccc; }
+  table.data td { padding: 6px 8px; font-size: 10px; border-bottom: 1px solid #eee; }
+  .empty { color: #999; font-style: italic; padding: 10px 0; }
+  .footnote { font-size: 9px; color: #999; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<h1>System Financial Audit Report</h1>
+<p class="subtitle">
+  Period: <span th:text="${fromDate}">2026-01-01</span> to <span th:text="${toDate}">2026-01-31</span>
+  &mdash; generated <span th:text="${#temporals.format(generatedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</span>
+</p>
+
+<table class="summary">
+  <tr>
+    <td>
+      <div class="label">Total Revenue (Approved)</div>
+      <div class="value" th:text="${#numbers.formatDecimal(totalRevenue, 1, 2)}">0.00</div>
+    </td>
+    <td>
+      <div class="label">Approval Rate</div>
+      <div class="value" th:text="${approvalRatePercent != null ? approvalRatePercent + '%' : 'n/a'}">n/a</div>
+    </td>
+    <td>
+      <div class="label">Rejection Rate</div>
+      <div class="value" th:text="${rejectionRatePercent != null ? rejectionRatePercent + '%' : 'n/a'}">n/a</div>
+    </td>
+  </tr>
+</table>
+<p class="footnote">
+  Approved: <span th:text="${approvedCount}">0</span> &middot;
+  Rejected: <span th:text="${rejectedCount}">0</span> &middot;
+  Pending: <span th:text="${pendingCount}">0</span>.
+  Rates exclude pending (undecided) transactions. Revenue figures exclude transactions submitted before a fee was
+  configured for their payment type -- those have no recorded amount, not a $0 amount.
+</p>
+
+<h2>Revenue by Payment Type</h2>
+<table class="data" th:if="${not #lists.isEmpty(revenueByType)}">
+  <thead>
+    <tr>
+      <th>Payment Type</th>
+      <th>Approved Count</th>
+      <th>Total Revenue</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="r : ${revenueByType}">
+      <td th:text="${r.paymentType}">TYPE</td>
+      <td th:text="${r.approvedCount}">0</td>
+      <td th:text="${r.totalRevenue != null ? #numbers.formatDecimal(r.totalRevenue, 1, 2) : 'not recorded'}">0.00</td>
+    </tr>
+  </tbody>
+</table>
+<p class="empty" th:if="${#lists.isEmpty(revenueByType)}">No approved transactions in this period.</p>
+
+<h2>Per-Farmer Breakdown</h2>
+<table class="data" th:if="${not #lists.isEmpty(farmerBreakdown)}">
+  <thead>
+    <tr>
+      <th>Farmer</th>
+      <th>Username</th>
+      <th>Approved Count</th>
+      <th>Total Revenue</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="f : ${farmerBreakdown}">
+      <td th:text="${f.fullName}">Name</td>
+      <td th:text="${f.username}">username</td>
+      <td th:text="${f.approvedCount}">0</td>
+      <td th:text="${f.totalRevenue != null ? #numbers.formatDecimal(f.totalRevenue, 1, 2) : 'not recorded'}">0.00</td>
+    </tr>
+  </tbody>
+</table>
+<p class="empty" th:if="${#lists.isEmpty(farmerBreakdown)}">No approved transactions in this period.</p>
+
+</body>
+</html>

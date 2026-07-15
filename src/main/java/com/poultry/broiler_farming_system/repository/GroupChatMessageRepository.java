@@ -13,4 +13,6 @@ public interface GroupChatMessageRepository extends JpaRepository<GroupChatMessa
     long countByGroupChatId(Long groupChatId);
 
     Optional<GroupChatMessage> findTopByGroupChatIdOrderBySentAtDesc(Long groupChatId);
+
+    void deleteBySenderId(Long senderId);
 }

@@ -1,17 +1,16 @@
 package com.poultry.broiler_farming_system.controller;
 
 import com.poultry.broiler_farming_system.dto.groupchat.AdminGroupChatDetailResponse;
-import com.poultry.broiler_farming_system.dto.groupchat.AdminGroupChatSummaryResponse;
+import com.poultry.broiler_farming_system.security.UserPrincipal;
 import com.poultry.broiler_farming_system.service.groupchat.GroupChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-// Admin-only moderation view over all group chats. Access is restricted to
-// ROLE_ADMIN by the existing "/api/v1/admin/**" rule in SecurityConfig, so
-// no per-group membership check is needed here (unlike GroupChatController).
+// Admin-only moderation view over the single, system-wide group chat (see
+// GroupChatService's Javadoc). Access is restricted to ROLE_ADMIN by the
+// existing "/api/v1/admin/**" rule in SecurityConfig.
 @RestController
 @RequestMapping("/api/v1/admin/group-chats")
 @RequiredArgsConstructor
@@ -20,18 +19,16 @@ public class AdminGroupChatController {
     private final GroupChatService groupChatService;
 
     @GetMapping
-    public List<AdminGroupChatSummaryResponse> listAll() {
-        return groupChatService.listAllGroups();
+    public AdminGroupChatDetailResponse getSharedGroup() {
+        return groupChatService.getSharedGroupDetail();
     }
 
-    @GetMapping("/{groupChatId}")
-    public AdminGroupChatDetailResponse getDetail(@PathVariable Long groupChatId) {
-        return groupChatService.getGroupDetail(groupChatId);
-    }
-
-    @DeleteMapping("/{groupChatId}/messages/{messageId}")
+    @DeleteMapping("/messages/{messageId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMessage(@PathVariable Long groupChatId, @PathVariable Long messageId) {
-        groupChatService.deleteMessage(groupChatId, messageId);
+    public void deleteMessage(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long messageId,
+            @RequestParam(required = false) String reason) {
+        groupChatService.deleteMessage(principal.getId(), messageId, reason);
     }
 }

@@ -12,16 +12,33 @@
     return document.documentElement.getAttribute('data-lang') || 'my';
   }
 
+  // Registration always creates a FREE-role user server-side today, but
+  // store/redirect by role anyway for consistency with login-page.js and in
+  // case that ever changes. See login-page.js's areaPrefixFor comment for
+  // why each area (admin/farmer/guest) gets its own storage prefix instead
+  // of one shared "user_*" prefix.
+  function areaPrefixFor(auth) {
+    if (auth.role === 'ADMIN') return 'admin';
+    return auth.accountType === 'FARMER' ? 'farmer' : 'guest';
+  }
+
   function storeSession(auth) {
-    localStorage.setItem('user_token', auth.accessToken);
-    localStorage.setItem('user_token_type', auth.tokenType || 'Bearer');
-    localStorage.setItem('user_token_expires_at', String(Date.now() + auth.expiresInSeconds * 1000));
-    localStorage.setItem('user_user', JSON.stringify({
+    var prefix = areaPrefixFor(auth);
+    localStorage.setItem(prefix + '_token', auth.accessToken);
+    localStorage.setItem(prefix + '_token_type', auth.tokenType || 'Bearer');
+    localStorage.setItem(prefix + '_token_expires_at', String(Date.now() + auth.expiresInSeconds * 1000));
+    localStorage.setItem(prefix + '_user', JSON.stringify({
       userId: auth.userId,
       username: auth.username,
       role: auth.role,
       accountType: auth.accountType
     }));
+  }
+
+  function redirectPathFor(auth) {
+    var prefix = areaPrefixFor(auth);
+    if (prefix === 'admin') return '/admin/dashboard';
+    return prefix === 'farmer' ? '/farmer' : '/guest';
   }
 
   function errorText(status, serverMessage) {
@@ -146,6 +163,9 @@
             (lang() === 'en' ? 'Account created — welcome, ' : 'အကောင့်ဖွင့်ပြီးပါပြီ — ကြိုဆိုပါသည်, ') + auth.username + '!',
             true
           );
+          setTimeout(function () {
+            window.location.href = redirectPathFor(auth);
+          }, 500);
         })
         .catch(function () {
           showAlert(errorText(0), false);

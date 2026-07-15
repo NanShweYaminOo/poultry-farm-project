@@ -38,6 +38,16 @@ public class AdminViewController {
         return "admin/feedback";
     }
 
+    @GetMapping("/payments")
+    public String payments() {
+        return "admin/payments";
+    }
+
+    @GetMapping("/account-upgrades")
+    public String accountUpgrades() {
+        return "admin/account-upgrades";
+    }
+
     @GetMapping("/breeds")
     public String breeds() {
         return "admin/breeds";

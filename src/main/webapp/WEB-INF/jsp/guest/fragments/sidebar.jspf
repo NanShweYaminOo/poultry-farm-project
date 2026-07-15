@@ -1,0 +1,52 @@
+<%@ page pageEncoding="UTF-8" %>
+<aside class="sidebar" id="dashboardSidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="bi bi-egg-fried"></i></div>
+    <div>
+      <div class="brand-name">Broiler Farm</div>
+      <div class="brand-tag i18n" data-my="ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု" data-en="Poultry Farm Management">ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link ${currentPage == 'dashboard' ? 'active' : ''}" href="<c:url value='/guest'/>">
+      <i class="bi bi-speedometer2"></i>
+      <span class="i18n" data-my="ဒက်ရှ်ဘုတ်" data-en="Dashboard">ဒက်ရှ်ဘုတ်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'breeds' ? 'active' : ''}" href="<c:url value='/guest/breeds'/>">
+      <i class="bi bi-egg-fried"></i>
+      <span class="i18n" data-my="ကြက်မျိုးရင်းများ" data-en="Breeds">ကြက်မျိုးရင်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'diseases' ? 'active' : ''}" href="<c:url value='/guest/diseases'/>">
+      <i class="bi bi-virus"></i>
+      <span class="i18n" data-my="ရောဂါများ" data-en="Diseases">ရောဂါများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'faqs' ? 'active' : ''}" href="<c:url value='/guest/faqs'/>">
+      <i class="bi bi-question-circle-fill"></i>
+      <span class="i18n" data-my="မေးလေ့ရှိသောမေးခွန်းများ" data-en="FAQs">မေးလေ့ရှိသောမေးခွန်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'articles' ? 'active' : ''}" href="<c:url value='/guest/articles'/>">
+      <i class="bi bi-journal-richtext"></i>
+      <span class="i18n" data-my="ဗဟုသုတဆောင်းပါးများ" data-en="Articles">ဗဟုသုတဆောင်းပါးများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'marketplace' ? 'active' : ''}" href="<c:url value='/guest/marketplace'/>">
+      <i class="bi bi-shop"></i>
+      <span class="i18n" data-my="စျေးကွက်" data-en="Marketplace">စျေးကွက်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'feedback' ? 'active' : ''}" href="<c:url value='/guest/feedback'/>">
+      <i class="bi bi-chat-square-text-fill"></i>
+      <span class="i18n" data-my="အကြံပြုချက်" data-en="Feedback">အကြံပြုချက်</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="nav-link ${currentPage == 'profile' ? 'active' : ''}" href="<c:url value='/guest/profile'/>">
+      <i class="bi bi-person-circle"></i>
+      <span class="i18n" data-my="ကျွန်ုပ်၏ပရိုဖိုင်" data-en="My Profile">ကျွန်ုပ်၏ပရိုဖိုင်</span>
+    </a>
+    <a class="nav-link nav-link-logout" href="<c:url value='/login'/>">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="i18n" data-my="ထွက်မည်" data-en="Logout">ထွက်မည်</span>
+    </a>
+  </div>
+</aside>

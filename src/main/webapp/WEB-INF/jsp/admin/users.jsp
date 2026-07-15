@@ -23,28 +23,28 @@
         <div class="col-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-value">1,284</div>
+            <div class="stat-value" id="statTotalUsersCount">&hellip;</div>
             <div class="stat-label i18n" data-my="စုစုပေါင်း အသုံးပြုသူများ" data-en="Total Users">စုစုပေါင်း အသုံးပြုသူများ</div>
           </div>
         </div>
         <div class="col-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-icon" style="background:var(--gold-100);color:var(--gold-700);"><i class="bi bi-star-fill"></i></div>
-            <div class="stat-value">312</div>
+            <div class="stat-value" id="statPaidUsersCount">&hellip;</div>
             <div class="stat-label i18n" data-my="ငွေပေးဆောင်ထားသူများ" data-en="Paid Users">ငွေပေးဆောင်ထားသူများ</div>
           </div>
         </div>
         <div class="col-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-icon" style="background:var(--danger-100);color:var(--danger);"><i class="bi bi-flag-fill"></i></div>
-            <div class="stat-value">9</div>
+            <div class="stat-value" id="statFlaggedUsersCount">&hellip;</div>
             <div class="stat-label i18n" data-my="ပြန်လည်စစ်ဆေးရန် အမှတ်အသားပြုထားသည်" data-en="Flagged for Review">ပြန်လည်စစ်ဆေးရန် အမှတ်အသားပြုထားသည်</div>
           </div>
         </div>
         <div class="col-6 col-lg-3">
           <div class="stat-card">
             <div class="stat-icon" style="background:#eef0ec;color:var(--muted);"><i class="bi bi-slash-circle-fill"></i></div>
-            <div class="stat-value">4</div>
+            <div class="stat-value" id="statBannedUsersCount">&hellip;</div>
             <div class="stat-label i18n" data-my="ပိတ်ပင်ခံထားရသူများ" data-en="Banned Users">ပိတ်ပင်ခံထားရသူများ</div>
           </div>
         </div>

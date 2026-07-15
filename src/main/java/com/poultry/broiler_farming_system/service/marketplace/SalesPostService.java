@@ -1,5 +1,6 @@
 package com.poultry.broiler_farming_system.service.marketplace;
 
+import com.poultry.broiler_farming_system.dto.marketplace.AdminSalesPostResponse;
 import com.poultry.broiler_farming_system.dto.marketplace.CreateSalesPostRequest;
 import com.poultry.broiler_farming_system.dto.marketplace.SalesPostResponse;
 
@@ -13,4 +14,12 @@ public interface SalesPostService {
     SalesPostResponse createPost(Long creatorId, CreateSalesPostRequest request);
 
     List<SalesPostResponse> listPosts();
+
+    // Admin-only moderation view, newest first, with the author's
+    // flagged/banned status visible.
+    List<AdminSalesPostResponse> listAllForAdmin();
+
+    // Admin override delete -- no ownership check, unlike a farmer deleting
+    // their own post (not a feature that exists here).
+    void deleteByAdmin(Long adminId, Long postId, String reason);
 }

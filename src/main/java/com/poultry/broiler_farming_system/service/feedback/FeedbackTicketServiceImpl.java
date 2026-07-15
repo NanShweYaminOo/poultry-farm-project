@@ -1,5 +1,6 @@
 package com.poultry.broiler_farming_system.service.feedback;
 
+import com.poultry.broiler_farming_system.dto.feedback.CreateFeedbackTicketRequest;
 import com.poultry.broiler_farming_system.dto.feedback.FeedbackTicketResponse;
 import com.poultry.broiler_farming_system.dto.feedback.UpdateFeedbackTicketStatusRequest;
 import com.poultry.broiler_farming_system.entity.FeedbackTicket;
@@ -10,9 +11,11 @@ import com.poultry.broiler_farming_system.exception.ResourceNotFoundException;
 import com.poultry.broiler_farming_system.exception.UnauthorizedActionException;
 import com.poultry.broiler_farming_system.repository.FeedbackTicketRepository;
 import com.poultry.broiler_farming_system.repository.UserRepository;
+import com.poultry.broiler_farming_system.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +27,33 @@ public class FeedbackTicketServiceImpl implements FeedbackTicketService {
 
     private final FeedbackTicketRepository feedbackTicketRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    @Override
+    @Transactional
+    public FeedbackTicketResponse create(Long userId, CreateFeedbackTicketRequest request) {
+        if (!StringUtils.hasText(request.content())) {
+            throw new IllegalArgumentException("content is required.");
+        }
+
+        User submittedBy = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User " + userId + " was not found."));
+
+        FeedbackTicket ticket = new FeedbackTicket();
+        ticket.setSubmittedBy(submittedBy);
+        ticket.setContent(request.content().trim());
+        // status starts PENDING via the entity's own field default.
+
+        FeedbackTicket saved = feedbackTicketRepository.save(ticket);
+        return toResponse(saved);
+    }
+
+    @Override
+    public List<FeedbackTicketResponse> listMine(Long userId) {
+        return feedbackTicketRepository.findBySubmittedByIdOrderByCreatedDateDesc(userId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
     @Override
     public List<FeedbackTicketResponse> listAll() {
@@ -55,6 +85,7 @@ public class FeedbackTicketServiceImpl implements FeedbackTicketService {
         ticket.setHandledByAdmin(admin);
         if (request.status() == TicketStatus.RESOLVED) {
             ticket.setResolvedDate(LocalDateTime.now());
+            notificationService.notifyFeedbackTicketResolved(ticket);
         }
 
         return toResponse(ticket);

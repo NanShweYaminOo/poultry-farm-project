@@ -4,7 +4,7 @@ import com.poultry.broiler_farming_system.entity.Batch;
 import com.poultry.broiler_farming_system.entity.enums.BatchStatus;
 import com.poultry.broiler_farming_system.repository.BatchRepository;
 import com.poultry.broiler_farming_system.repository.DailyLogRepository;
-import com.poultry.broiler_farming_system.service.notification.SmsService;
+import com.poultry.broiler_farming_system.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public class DailyLogEnforcementCronJob {
 
     private final BatchRepository batchRepository;
     private final DailyLogRepository dailyLogRepository;
-    private final SmsService smsService;
+    private final NotificationService notificationService;
 
     @Scheduled(cron = "0 0 18 * * *")
     public void enforceDailyLogging() {
@@ -35,10 +35,15 @@ public class DailyLogEnforcementCronJob {
         for (Batch batch : batchRepository.findByStatusAndIsStartedTrue(BatchStatus.ACTIVE)) {
             boolean loggedToday = dailyLogRepository.existsByBatchIdAndLogDate(batch.getId(), today);
             if (!loggedToday) {
-                String message = "Reminder: today's mortality count and remaining chicken count for batch '"
-                        + batch.getBatchName() + "' has not been logged yet.";
-                log.warn("Batch {} has no daily log for {}; sending SMS warning.", batch.getId(), today);
-                smsService.sendSms(batch.getFarmer().getPhoneNumber(), message);
+                log.warn("Batch {} has no daily log for {}; notifying farmer + sending SMS warning.",
+                        batch.getId(), today);
+                // Persists an in-app notification synchronously and, since
+                // this is the one trigger the spec explicitly requires SMS
+                // for, also publishes an event that sends the SMS
+                // asynchronously after commit -- see
+                // NotificationServiceImpl.notifyDailyLogMissing and
+                // SmsRequestedEventListener.
+                notificationService.notifyDailyLogMissing(batch, today);
             }
         }
     }

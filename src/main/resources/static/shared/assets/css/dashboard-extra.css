@@ -1,0 +1,72 @@
+/* ==========================================================================
+   Broiler Farming System — User Dashboard extras
+   Builds on the shared shell/table/card/badge/accordion styles already in
+   admin-theme.css; adds only what that stylesheet doesn't already cover.
+   ========================================================================== */
+
+.welcome-banner{
+  background:linear-gradient(135deg,var(--emerald-800),var(--emerald-600));
+  color:var(--gold-100);
+  border-radius:var(--radius);
+  padding:26px 28px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow-sm);
+}
+.welcome-banner h1{margin:0 0 6px;font-size:22px;color:var(--white);}
+.welcome-banner p{margin:0;color:var(--gold-200);font-size:13.5px;}
+
+.quick-link-card{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:18px;
+  height:100%;
+  text-decoration:none;
+  transition:box-shadow .15s ease, transform .15s ease;
+}
+.quick-link-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.quick-link-card .quick-link-icon{
+  width:46px;height:46px;flex-shrink:0;
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  background:var(--emerald-100);
+  color:var(--emerald-700);
+}
+.quick-link-card .quick-link-title{font-weight:700;color:var(--emerald-900);font-size:14.5px;}
+.quick-link-card .quick-link-sub{font-size:12.5px;color:var(--muted);margin-top:2px;}
+
+/* ---------- Marketplace tabs ---------- */
+.nav-tabs{border-bottom-color:var(--line);margin-bottom:16px;}
+.nav-tabs .nav-link{
+  color:var(--muted);
+  font-weight:700;
+  font-size:13.5px;
+  border:none;
+  border-bottom:2.5px solid transparent;
+  border-radius:0;
+}
+.nav-tabs .nav-link.active{
+  color:var(--emerald-800);
+  background:none;
+  border-bottom-color:var(--gold-500);
+}
+
+.empty-state{
+  text-align:center;
+  padding:36px 16px;
+  color:var(--muted);
+  font-size:13.5px;
+}
+
+/* ---------- Inline loading spinner (chatbot typing indicator, etc.) ---------- */
+.spinner{
+  width:14px;height:14px;
+  border:2.5px solid rgba(4,30,24,.2);
+  border-top-color:var(--emerald-700);
+  border-radius:50%;
+  display:inline-block;
+  vertical-align:-2px;
+  animation:dashboard-spin .7s linear infinite;
+}
+@keyframes dashboard-spin{to{transform:rotate(360deg);}}

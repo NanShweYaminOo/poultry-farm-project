@@ -6,6 +6,7 @@ import com.poultry.broiler_farming_system.entity.Batch;
 import com.poultry.broiler_farming_system.entity.SystemConfiguration;
 import com.poultry.broiler_farming_system.entity.User;
 import com.poultry.broiler_farming_system.entity.enums.BatchStatus;
+import com.poultry.broiler_farming_system.entity.enums.UserRole;
 import com.poultry.broiler_farming_system.exception.InvalidBatchStateException;
 import com.poultry.broiler_farming_system.exception.MissingSystemConfigurationException;
 import com.poultry.broiler_farming_system.exception.ResourceNotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -33,6 +35,14 @@ public class BatchServiceImpl implements BatchService {
     private final UserRepository userRepository;
     private final SystemConfigurationRepository systemConfigurationRepository;
     private final MedicineAlarmSchedulerService schedulerService;
+    private final BatchOwnershipGuard batchOwnershipGuard;
+
+    @Override
+    public List<BatchResponse> listMyBatches(Long farmerId) {
+        return batchRepository.findByFarmerIdOrderByCreatedDateDesc(farmerId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
 
     @Override
     public BatchResponse createBatch(Long farmerId, CreateBatchRequest request) {
@@ -78,9 +88,10 @@ public class BatchServiceImpl implements BatchService {
     }
 
     @Override
-    public BatchResponse startBatch(Long batchId) {
+    public BatchResponse startBatch(Long callerId, Long batchId) {
         Batch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch " + batchId + " was not found."));
+        batchOwnershipGuard.requireOwnership(callerId, batch);
 
         if (Boolean.TRUE.equals(batch.getIsStarted())) {
             throw new InvalidBatchStateException("Batch " + batchId + " has already been started.");
@@ -105,13 +116,14 @@ public class BatchServiceImpl implements BatchService {
     }
 
     @Override
-    public BatchResponse stopBatch(Long batchId, BatchStatus finalStatus) {
+    public BatchResponse stopBatch(Long callerId, Long batchId, BatchStatus finalStatus) {
         if (finalStatus == null || !VALID_FINAL_STATUSES.contains(finalStatus)) {
             throw new IllegalArgumentException("finalStatus must be COMPLETED or CANCELLED.");
         }
 
         Batch batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch " + batchId + " was not found."));
+        batchOwnershipGuard.requireOwnership(callerId, batch);
 
         if (!Boolean.TRUE.equals(batch.getIsStarted())) {
             throw new InvalidBatchStateException(
@@ -129,7 +141,23 @@ public class BatchServiceImpl implements BatchService {
         batch.setStatus(finalStatus);
         Batch saved = batchRepository.save(batch);
 
+        demoteFarmerIfNoActiveBatchesRemain(saved.getFarmer());
+
         return toResponse(saved);
+    }
+
+    private void demoteFarmerIfNoActiveBatchesRemain(User farmer) {
+        // PAID is what unlocks chatbot/group-chat/calculator/alarm access
+        // under the pay-per-batch model; once every batch's cycle has ended
+        // there's nothing left to justify keeping it. Never touches ADMIN.
+        if (farmer.getRole() != UserRole.PAID) {
+            return;
+        }
+        boolean hasRemainingActiveBatch =
+                batchRepository.existsByFarmerIdAndIsStartedTrueAndStatus(farmer.getId(), BatchStatus.ACTIVE);
+        if (!hasRemainingActiveBatch) {
+            farmer.setRole(UserRole.FREE);
+        }
     }
 
     private BatchResponse toResponse(Batch batch) {

@@ -27,7 +27,10 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public List<GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        return List.of(
+                new SimpleGrantedAuthority("ROLE_" + user.getRole().name()),
+                new SimpleGrantedAuthority("ROLE_" + user.getAccountType().name())
+        );
     }
 
     @Override

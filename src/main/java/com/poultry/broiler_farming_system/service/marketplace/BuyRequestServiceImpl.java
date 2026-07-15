@@ -1,13 +1,16 @@
 package com.poultry.broiler_farming_system.service.marketplace;
 
+import com.poultry.broiler_farming_system.dto.marketplace.AdminBuyRequestResponse;
 import com.poultry.broiler_farming_system.dto.marketplace.BuyRequestResponse;
 import com.poultry.broiler_farming_system.dto.marketplace.CreateBuyRequestRequest;
 import com.poultry.broiler_farming_system.entity.BuyRequest;
 import com.poultry.broiler_farming_system.entity.User;
+import com.poultry.broiler_farming_system.entity.enums.SystemLogAction;
 import com.poultry.broiler_farming_system.exception.ResourceNotFoundException;
 import com.poultry.broiler_farming_system.repository.BuyRequestRepository;
 import com.poultry.broiler_farming_system.repository.UserRepository;
 import com.poultry.broiler_farming_system.service.moderation.ContentModerationService;
+import com.poultry.broiler_farming_system.service.systemlog.SystemLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ public class BuyRequestServiceImpl implements BuyRequestService {
     private final BuyRequestRepository buyRequestRepository;
     private final UserRepository userRepository;
     private final ContentModerationService contentModerationService;
+    private final SystemLogService systemLogService;
 
     @Override
     public BuyRequestResponse createRequest(Long creatorId, CreateBuyRequestRequest request) {
@@ -57,6 +61,28 @@ public class BuyRequestServiceImpl implements BuyRequestService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdminBuyRequestResponse> listAllForAdmin() {
+        return buyRequestRepository.findAllByOrderByCreatedDateDesc().stream()
+                .map(this::toAdminResponse)
+                .toList();
+    }
+
+    @Override
+    public void deleteByAdmin(Long adminId, Long requestId, String reason) {
+        BuyRequest buyRequest = buyRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Buy request " + requestId + " was not found."));
+
+        String description = "Deleted buy request '" + buyRequest.getTitle() + "' (id " + requestId
+                + ") by user '" + buyRequest.getCreator().getUsername() + "'"
+                + (StringUtils.hasText(reason) ? "; reason: " + reason.trim() : ".");
+
+        buyRequestRepository.delete(buyRequest);
+
+        systemLogService.record(adminId, SystemLogAction.DELETE_BUY_REQUEST, "BUY_REQUEST", requestId, description);
+    }
+
     private BuyRequestResponse toResponse(BuyRequest buyRequest) {
         User creator = buyRequest.getCreator();
         return new BuyRequestResponse(
@@ -64,6 +90,21 @@ public class BuyRequestServiceImpl implements BuyRequestService {
                 creator.getId(),
                 creator.getUsername(),
                 creator.getProfileImageUrl(),
+                buyRequest.getTitle(),
+                buyRequest.getDescription(),
+                buyRequest.getQuantity(),
+                buyRequest.getCreatedDate()
+        );
+    }
+
+    private AdminBuyRequestResponse toAdminResponse(BuyRequest buyRequest) {
+        User creator = buyRequest.getCreator();
+        return new AdminBuyRequestResponse(
+                buyRequest.getId(),
+                creator.getId(),
+                creator.getUsername(),
+                creator.getIsBanned(),
+                creator.getIsFlaggedForReview(),
                 buyRequest.getTitle(),
                 buyRequest.getDescription(),
                 buyRequest.getQuantity(),

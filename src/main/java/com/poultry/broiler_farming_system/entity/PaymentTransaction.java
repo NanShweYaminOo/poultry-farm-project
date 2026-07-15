@@ -5,6 +5,7 @@ import com.poultry.broiler_farming_system.entity.enums.PaymentType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,6 +40,16 @@ public class PaymentTransaction {
 
     @Column(name = "screenshot_url", nullable = false, length = 500)
     private String screenshotUrl;
+
+    // Stamped at submission time from the admin-configured fee for this
+    // paymentType (see PaymentTransactionServiceImpl.readFeeForType) -- the
+    // amount the farmer actually paid, not whatever the fee happens to be by
+    // the time an admin reviews it. Nullable: rows created before this field
+    // existed, or submitted before the admin configured a fee, have no
+    // recorded amount; reports treat those as excluded/zero and call out the
+    // gap rather than silently miscounting them as $0 revenue.
+    @Column(precision = 12, scale = 2)
+    private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

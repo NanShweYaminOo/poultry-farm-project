@@ -5,6 +5,7 @@ import com.poultry.broiler_farming_system.entity.InventoryItem;
 import com.poultry.broiler_farming_system.exception.ResourceNotFoundException;
 import com.poultry.broiler_farming_system.repository.BatchRepository;
 import com.poultry.broiler_farming_system.repository.InventoryItemRepository;
+import com.poultry.broiler_farming_system.service.batch.BatchOwnershipGuard;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,10 +25,14 @@ public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryItemRepository inventoryItemRepository;
     private final BatchRepository batchRepository;
+    private final BatchOwnershipGuard batchOwnershipGuard;
 
     @Override
-    public InventoryItem restock(Long batchId, String itemName, String unit, BigDecimal quantityToAdd) {
-        InventoryItem item = getOrCreate(batchId, itemName, unit);
+    public InventoryItem restock(Long callerId, Long batchId, String itemName, String unit, BigDecimal quantityToAdd) {
+        Batch batch = getBatch(batchId);
+        batchOwnershipGuard.requireOwnership(callerId, batch);
+
+        InventoryItem item = getOrCreate(batch, itemName, unit);
         BigDecimal amount = requirePositive(quantityToAdd, "quantity");
         item.setQuantityInStock(item.getQuantityInStock().add(amount).setScale(QUANTITY_SCALE, RoundingMode.HALF_UP));
         return inventoryItemRepository.save(item);
@@ -35,7 +40,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public InventoryItem deduct(Long batchId, String itemName, BigDecimal quantityToDeduct) {
-        InventoryItem item = getOrCreate(batchId, itemName, null);
+        InventoryItem item = getOrCreate(getBatch(batchId), itemName, null);
         BigDecimal amount = requirePositive(quantityToDeduct, "quantity");
         item.setQuantityInStock(item.getQuantityInStock().subtract(amount).setScale(QUANTITY_SCALE, RoundingMode.HALF_UP));
         return inventoryItemRepository.save(item);
@@ -43,16 +48,17 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InventoryItem> listForBatch(Long batchId) {
+    public List<InventoryItem> listForBatch(Long callerId, Long batchId) {
+        batchOwnershipGuard.requireOwnership(callerId, getBatch(batchId));
         return inventoryItemRepository.findByBatchIdOrderByItemNameAsc(batchId);
     }
 
-    private InventoryItem getOrCreate(Long batchId, String itemName, String unitForCreation) {
+    private InventoryItem getOrCreate(Batch batch, String itemName, String unitForCreation) {
         requireItemName(itemName);
-        return inventoryItemRepository.findByBatchIdAndItemNameIgnoreCase(batchId, itemName)
+        return inventoryItemRepository.findByBatchIdAndItemNameIgnoreCase(batch.getId(), itemName)
                 .orElseGet(() -> {
                     InventoryItem created = new InventoryItem();
-                    created.setBatch(getBatch(batchId));
+                    created.setBatch(batch);
                     created.setItemName(itemName.trim());
                     created.setUnit(StringUtils.hasText(unitForCreation) ? unitForCreation.trim() : DEFAULT_UNIT);
                     created.setQuantityInStock(BigDecimal.ZERO);

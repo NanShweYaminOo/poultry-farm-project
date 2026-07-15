@@ -4,6 +4,7 @@ import com.poultry.broiler_farming_system.dto.medicine.MedicineEstimateResponse;
 import com.poultry.broiler_farming_system.entity.BatchAlarm;
 import com.poultry.broiler_farming_system.repository.BatchAlarmRepository;
 import com.poultry.broiler_farming_system.service.medicine.MedicineEstimationService;
+import com.poultry.broiler_farming_system.service.notification.NotificationService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -37,6 +38,9 @@ public class MedicineAlarmJob implements Job {
     @Autowired
     private MedicineEstimationService medicineEstimationService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         Long batchAlarmId = context.getJobDetail().getJobDataMap().getLong(DATA_KEY_BATCH_ALARM_ID);
@@ -52,10 +56,15 @@ public class MedicineAlarmJob implements Job {
         }
 
         try {
-            MedicineEstimateResponse estimate = medicineEstimationService.estimateForAlarm(batchAlarmId, null);
+            // estimateForAlarm() is ownership-checked; passing the alarm's
+            // own batch's farmer as the caller satisfies that trivially,
+            // since a farmer always owns their own batch.
+            Long farmerId = alarm.getBatch().getFarmer().getId();
+            MedicineEstimateResponse estimate = medicineEstimationService.estimateForAlarm(farmerId, batchAlarmId, null);
             log.info("Medicine alarm due -- batch {}: '{}' needs ~{} {} (est. cost {}).",
                     estimate.batchId(), alarm.getMedicineName(), estimate.calculatedQuantity(),
                     estimate.unit(), estimate.estimatedCost());
+            notificationService.notifyMedicineAlarmDue(alarm);
         } catch (RuntimeException ex) {
             // A missing daily log or admin formula shouldn't kill the
             // trigger's schedule -- log it and let the next firing (or the

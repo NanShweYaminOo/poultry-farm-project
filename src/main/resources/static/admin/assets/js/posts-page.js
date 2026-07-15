@@ -1,50 +1,14 @@
 /* ==========================================================================
    Broiler Farming System — Admin Frontend
    User Posts Management (posts.jsp)
-   Feed of public sales posts + chat/buy requests with moderation delete.
+   Feed of public sales posts + buy requests with moderation delete, backed
+   by GET/DELETE /api/v1/admin/sales-posts and /api/v1/admin/buy-requests.
    ========================================================================== */
 
 (function () {
-  var posts = [
-    {
-      id: 1, type: 'sale', name: 'ဦးအောင်ကျော်', initials: 'အက',
-      time: '၂ နာရီအရင်', title: 'ဘရွိုင်လာကြက် ၅၀၀ ကောင် ရောင်းရန်ရှိသည်',
-      content: 'အသက် ၄၀ ရက်သား ကျန်းမာသန်စွမ်းသော ဘရွိုင်လာကြက်များ အထုပ်ကြီးဖြင့် ရောင်းချမည်။ တစ်ပြိုင်နက် ဝယ်ယူပါက စျေးနှုန်း လျှော့ပေးပါမည်။',
-      price: '၈,၅၀၀ ကျပ်/ကီလို'
-    },
-    {
-      id: 2, type: 'request', name: 'မသီတာဝင်း', initials: 'သဝ',
-      time: '၅ နာရီအရင်', title: 'ကြက်ကုန်ကျစရိတ်နှင့် ကျွေးမွေးနည်း ဆွေးနွေးလိုပါသည်',
-      content: 'ကြက်ဆေးထိုးရန် အချိန်ဇယားနှင့် အစားအစာ ရွေးချယ်မှုနှင့် ပတ်သက်၍ အတွေ့အကြုံရှိသူများနှင့် တိုက်ရိုက် စကားပြောလိုပါသည်။',
-      quantity: '၁၀၀'
-    },
-    {
-      id: 3, type: 'sale', name: 'ကိုမင်းသူ', initials: 'ကမ',
-      time: '၁ ရက်အရင်', title: 'အသက် ၄၅ ရက်သား ကြက်များ ရောင်းမည်',
-      content: 'ပျမ်းမျှ အလေးချိန် ၂.၂ ကီလိုဂရမ်ရှိသော ကြက်များ ရနိုင်ပါသည်။ နေရပ်တွင် ကိုယ်တိုင်လာ၍ ကြည့်ရှုနိုင်ပါသည်။',
-      price: '၉,၀၀၀ ကျပ်/ကီလို'
-    },
-    {
-      id: 4, type: 'request', name: 'ဒေါ်နှင်းနှင်းအေး', initials: 'နအ',
-      time: '၂ ရက်အရင်', title: 'ကြက်ဆေးဝါးများ အစုလိုက် ဝယ်လိုပါသည်',
-      content: 'ကြက် ၃၀၀ ကောင်အတွက် လိုအပ်သည့် ဗီတာမင်နှင့် ရောဂါကာကွယ်ဆေးများ အကြံပြုပေးနိုင်သူနှင့် စကားပြောလိုပါသည်။',
-      quantity: '၃၀၀'
-    },
-    {
-      id: 5, type: 'sale', name: 'ကိုဇော်လင်း', initials: 'ကဇ',
-      time: '၃ ရက်အရင်', title: 'ဥထုတ်ကြက်များ လက်ကားရောင်းချမည်',
-      content: 'နေ့စဉ် ဥအထွက်နှုန်း ကောင်းမွန်သော ကြက်များအား လက်ကားစျေးနှုန်းဖြင့် ရောင်းချပေးပါသည်။',
-      price: '၇,၂၀၀ ကျပ်/ကောင်'
-    },
-    {
-      id: 6, type: 'request', name: 'မခင်ဇာဇာ', initials: 'ခဇ',
-      time: '၄ ရက်အရင်', title: 'တိုက်ကြက်မွေးမြူရေး နည်းစနစ် မေးမြန်းလိုသည်',
-      content: 'အိမ်တွင်း တိုက်ကန်စနစ်ဖြင့် ကြက်ကလေး ၅၀ စတင်မွေးမြူလိုပါသဖြင့် အကြံဉာဏ်ရယူလိုပါသည်။',
-      quantity: '၅၀'
-    }
-  ];
-
+  var posts = [];
   var deletedId = null;
+  var deletedType = null;
   var currentFilter = 'all';
   var currentSearch = '';
   var deleteModalEl = document.getElementById('deleteModal');
@@ -52,6 +16,24 @@
 
   function lang() {
     return document.documentElement.getAttribute('data-lang') || 'my';
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text == null ? '' : String(text);
+    return div.innerHTML;
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    var then = new Date(iso).getTime();
+    if (isNaN(then)) return '';
+    var minutes = Math.max(0, Math.round((Date.now() - then) / 60000));
+    if (minutes < 60) return lang() === 'en' ? minutes + ' min ago' : minutes + ' မိနစ်အရင်';
+    var hours = Math.round(minutes / 60);
+    if (hours < 24) return lang() === 'en' ? hours + ' hr ago' : hours + ' နာရီအရင်';
+    var days = Math.round(hours / 24);
+    return lang() === 'en' ? days + ' day(s) ago' : days + ' ရက်အရင်';
   }
 
   function typeBadge(type) {
@@ -63,16 +45,61 @@
 
   function metaChip(post) {
     if (post.type === 'sale') {
-      return '<span class="post-chip"><i class="bi bi-tag-fill"></i> ' + post.price + '</span>';
+      var price = post.price != null ? post.price : '-';
+      return '<span class="post-chip"><i class="bi bi-tag-fill"></i> ' + escapeHtml(price) + '</span>';
     }
-    return '<span class="post-chip"><i class="bi bi-boxes"></i> ' + (lang() === 'en' ? 'Qty: ' : 'အရေအတွက်: ') + post.quantity + '</span>';
+    return '<span class="post-chip"><i class="bi bi-boxes"></i> ' + (lang() === 'en' ? 'Qty: ' : 'အရေအတွက်: ') + escapeHtml(post.quantity) + '</span>';
+  }
+
+  function authorBadges(post) {
+    var html = '';
+    if (post.creatorIsBanned) {
+      html += ' <span class="badge badge-danger-soft">' + (lang() === 'en' ? 'Banned' : 'ပိတ်ပင်') + '</span>';
+    }
+    if (post.creatorIsFlaggedForReview) {
+      html += ' <span class="badge badge-gold">' + (lang() === 'en' ? 'Flagged' : 'အမှတ်အသား') + '</span>';
+    }
+    return html;
+  }
+
+  function loadPosts() {
+    var feed = document.getElementById('postsFeed');
+    feed.innerHTML = '<p class="text-center i18n" style="padding:30px;color:var(--muted);" data-my="တင်နေသည်..." data-en="Loading...">' +
+      (lang() === 'en' ? 'Loading...' : 'တင်နေသည်...') + '</p>';
+
+    Promise.all([
+      window.AdminUI.authFetch('/api/v1/admin/sales-posts').then(function (r) { return r.ok ? r.json() : []; }),
+      window.AdminUI.authFetch('/api/v1/admin/buy-requests').then(function (r) { return r.ok ? r.json() : []; })
+    ]).then(function (results) {
+      var salesPosts = results[0].map(function (p) {
+        return {
+          id: p.id, type: 'sale', name: p.creatorUsername,
+          creatorIsBanned: p.creatorIsBanned, creatorIsFlaggedForReview: p.creatorIsFlaggedForReview,
+          time: p.createdDate, title: p.title, content: p.description, price: p.price
+        };
+      });
+      var buyRequests = results[1].map(function (p) {
+        return {
+          id: p.id, type: 'request', name: p.creatorUsername,
+          creatorIsBanned: p.creatorIsBanned, creatorIsFlaggedForReview: p.creatorIsFlaggedForReview,
+          time: p.createdDate, title: p.title, content: p.description, quantity: p.quantity
+        };
+      });
+      posts = salesPosts.concat(buyRequests).sort(function (a, b) {
+        return new Date(b.time) - new Date(a.time);
+      });
+      render();
+    }).catch(function () {
+      feed.innerHTML = '<p class="text-center" style="padding:30px;color:var(--muted);">' +
+        (lang() === 'en' ? 'Failed to load posts.' : 'ပို့စ်များ ရယူ၍မရပါ။') + '</p>';
+    });
   }
 
   function render() {
     var feed = document.getElementById('postsFeed');
     var filtered = posts.filter(function (p) {
       var matchesFilter = currentFilter === 'all' || p.type === currentFilter;
-      var haystack = (p.name + ' ' + p.title + ' ' + p.content).toLowerCase();
+      var haystack = (p.name + ' ' + p.title + ' ' + (p.content || '')).toLowerCase();
       var matchesSearch = haystack.indexOf(currentSearch.toLowerCase()) !== -1;
       return matchesFilter && matchesSearch;
     });
@@ -92,26 +119,31 @@
 
     feed.innerHTML = filtered.map(function (p) {
       return (
-        '<article class="post-card" data-id="' + p.id + '">' +
+        '<article class="post-card" data-id="' + p.id + '" data-type="' + p.type + '">' +
         '<div class="post-card-head">' +
-        '<div class="post-avatar">' + p.initials + '</div>' +
-        '<div class="post-user"><div class="name">' + p.name + '</div><div class="time">' + p.time + '</div></div>' +
+        '<div class="post-avatar">' + escapeHtml((p.name || '?').slice(0, 2).toUpperCase()) + '</div>' +
+        '<div class="post-user"><div class="name">' + escapeHtml(p.name) + authorBadges(p) + '</div><div class="time">' + timeAgo(p.time) + '</div></div>' +
         typeBadge(p.type) +
         '</div>' +
-        '<p class="post-title">' + p.title + '</p>' +
-        '<p class="post-content">' + p.content + '</p>' +
+        '<p class="post-title">' + escapeHtml(p.title) + '</p>' +
+        '<p class="post-content">' + escapeHtml(p.content) + '</p>' +
         '<div class="post-meta">' + metaChip(p) + '</div>' +
         '<div class="post-card-footer">' +
-        '<button class="btn btn-outline btn-view"><i class="bi bi-eye-fill"></i> ' + (lang() === 'en' ? 'View' : 'ကြည့်ရန်') + '</button>' +
-        '<button class="btn btn-danger btn-delete" data-id="' + p.id + '"><i class="bi bi-trash-fill"></i> ' + (lang() === 'en' ? 'Delete Post' : 'အရေးယူ/ဖျက်သိမ်းရန်') + '</button>' +
+        '<button class="btn btn-danger btn-delete" data-id="' + p.id + '" data-type="' + p.type + '"><i class="bi bi-trash-fill"></i> ' + (lang() === 'en' ? 'Delete Post' : 'အရေးယူ/ဖျက်သိမ်းရန်') + '</button>' +
         '</div>' +
         '</article>'
       );
     }).join('');
   }
 
+  function deleteEndpointFor(type, id) {
+    return type === 'sale'
+      ? '/api/v1/admin/sales-posts/' + id
+      : '/api/v1/admin/buy-requests/' + id;
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    render();
+    loadPosts();
 
     document.getElementById('filterTabs').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-filter]');
@@ -132,15 +164,26 @@
       var delBtn = e.target.closest('.btn-delete');
       if (delBtn && deleteModal) {
         deletedId = Number(delBtn.getAttribute('data-id'));
+        deletedType = delBtn.getAttribute('data-type');
         deleteModal.show();
       }
     });
 
     document.getElementById('confirmDelete').addEventListener('click', function () {
-      posts = posts.filter(function (p) { return p.id !== deletedId; });
-      deleteModal.hide();
-      render();
-      window.AdminUI.toast('ပို့စ်ကို ဖျက်သိမ်းပြီးပါပြီ', 'Post deleted successfully', 'bi-trash-fill');
+      window.AdminUI.authFetch(deleteEndpointFor(deletedType, deletedId), { method: 'DELETE' })
+        .then(function (response) {
+          deleteModal.hide();
+          if (!response.ok && response.status !== 404) {
+            window.AdminUI.toast('ပို့စ်ကို ဖျက်၍မရပါ။', 'Failed to delete post.', 'bi-exclamation-triangle-fill');
+            return;
+          }
+          window.AdminUI.toast('ပို့စ်ကို ဖျက်သိမ်းပြီးပါပြီ', 'Post deleted successfully', 'bi-trash-fill');
+          loadPosts();
+        })
+        .catch(function () {
+          deleteModal.hide();
+          window.AdminUI.toast('ပို့စ်ကို ဖျက်၍မရပါ။', 'Failed to delete post.', 'bi-exclamation-triangle-fill');
+        });
     });
 
     document.addEventListener('adminlangchange', function (e) {

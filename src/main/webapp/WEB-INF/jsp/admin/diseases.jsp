@@ -36,8 +36,8 @@
             <tr>
               <th class="i18n" data-my="ပုံ" data-en="Photo">ပုံ</th>
               <th class="i18n" data-my="ရောဂါအမည်" data-en="Disease">ရောဂါအမည်</th>
-              <th class="i18n" data-my="အဓိက လက္ခဏာများ" data-en="Key Symptoms">အဓိက လက္ခဏာများ</th>
-              <th class="i18n" data-my="မှတ်ချက်" data-en="Notes">မှတ်ချက်</th>
+              <th class="i18n" data-my="ရောဂါပိုး" data-en="virus">ရောဂါပိုး</th>
+              <th class="i18n" data-my="အကြောင်းအရာ" data-en="Details">အကြောင်းအရာ</th>
               <th class="text-end i18n" data-my="လုပ်ဆောင်ချက်" data-en="Actions">လုပ်ဆောင်ချက်</th>
             </tr>
           </thead>
@@ -68,11 +68,11 @@
               <input type="text" class="form-control" id="diseaseNameInput" required>
             </div>
             <div class="col-md-12">
-              <label class="form-label i18n" data-my="အဓိက လက္ခဏာများ" data-en="Key Symptoms">အဓိက လက္ခဏာများ</label>
+              <label class="form-label i18n" data-my="ရောဂါပိုး" data-en="Virus">ရောဂါပိုး</label>
               <textarea class="form-control" id="diseaseSymptomsInput" rows="2"></textarea>
             </div>
             <div class="col-md-12">
-              <label class="form-label i18n" data-my="မှတ်ချက်" data-en="Notes">မှတ်ချက်</label>
+              <label class="form-label i18n" data-my="အကြောင်းအရာ" data-en="Details">အကြောင်းအရာ</label>
               <textarea class="form-control" id="diseaseNotesInput" rows="2"></textarea>
             </div>
             <div class="col-md-12">

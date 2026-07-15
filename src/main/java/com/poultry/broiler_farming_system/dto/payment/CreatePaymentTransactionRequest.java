@@ -10,9 +10,14 @@ import com.poultry.broiler_farming_system.entity.enums.PaymentType;
 // stamped server-side at submission time, same as every other
 // "action happened now" field in this system (start/stop batch, task
 // completion, etc).
+// screenshotUrl is NOT a field here either -- the farmer uploads the
+// screenshot as an image file (see PaymentTransactionController), and the
+// URL is computed server-side by FileStorageService once it's stored.
+// Bound via @ModelAttribute from multipart/form-data fields (sent alongside
+// the image file), not a JSON @RequestBody -- a request can't mix a JSON
+// body with a file part.
 public record CreatePaymentTransactionRequest(
         Long batchId,
-        PaymentType paymentType,
-        String screenshotUrl
+        PaymentType paymentType
 ) {
 }

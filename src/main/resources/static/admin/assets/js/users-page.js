@@ -1,20 +1,15 @@
 /* ==========================================================================
    Broiler Farming System — Admin Frontend
-   User Management & Toxicity Review (users.jsp)
+   User Management & Flag Review (users.jsp), backed by
+   GET/POST /api/v1/admin/users/**.
+   Loads a large single page (?size=200) since this UI has no pagination
+   controls -- fine at this project's scale; add real pager controls if the
+   user base grows past that.
    ========================================================================== */
 
 (function () {
-  var users = [
-    { id: 1, name: 'ဦးအောင်ကျော်', email: 'aungkyaw@broilerfarm.com', role: 'PAID', banned: false, flagged: false, joined: '၁၂-၀၁-၂၀၂၅', flaggedContent: null },
-    { id: 2, name: 'မသီတာဝင်း', email: 'thidarwin@broilerfarm.com', role: 'FREE', banned: false, flagged: true, joined: '၀၃-၀၃-၂၀၂၅', flaggedContent: 'ကိုယ်ရေးကိုယ်တာ ကျိန်ဆဲသည့် စကားလုံးများပါဝင်သော မှတ်ချက်တစ်ခုကို ပို့စ်တွင် ချန်ခဲ့သည်။' },
-    { id: 3, name: 'ကိုမင်းသူ', email: 'minthu@broilerfarm.com', role: 'PAID', banned: false, flagged: false, joined: '၂၂-၀၅-၂၀၂၄', flaggedContent: null },
-    { id: 4, name: 'ဒေါ်နှင်းနှင်းအေး', email: 'nweaye@broilerfarm.com', role: 'FREE', banned: true, flagged: false, joined: '၀၉-၀၉-၂၀၂၄', flaggedContent: null },
-    { id: 5, name: 'ကိုဇော်လင်း', email: 'zawlin@broilerfarm.com', role: 'ADMIN', banned: false, flagged: false, joined: '၀၁-၀၁-၂၀၂၃', flaggedContent: null },
-    { id: 6, name: 'မခင်ဇာဇာ', email: 'khinzarzar@broilerfarm.com', role: 'FREE', banned: false, flagged: true, joined: '၁၅-၁၁-၂၀၂၅', flaggedContent: 'အခြားအသုံးပြုသူတစ်ဦးအား ခြိမ်းခြောက်သည့်သဘောသက်ရောက်သော စကားပြောဆိုမှု တစ်ခု တွေ့ရှိရသည်။' },
-    { id: 7, name: 'ကိုစိုးမင်းထွန်း', email: 'soemint@broilerfarm.com', role: 'PAID', banned: true, flagged: true, joined: '၀၅-၀၆-၂၀၂၄', flaggedContent: 'ရောင်းချမည့်ပို့စ်တွင် လိမ်လည်လှည့်ဖြားမှုရှိသည်ဟု အသုံးပြုသူများစွာမှ တိုင်ကြားခဲ့သည်။' },
-    { id: 8, name: 'ဒေါ်ခင်မာလေး', email: 'khinmalay@broilerfarm.com', role: 'FREE', banned: false, flagged: false, joined: '၂၈-၀၂-၂၀၂၅', flaggedContent: null }
-  ];
-
+  var PAGE_SIZE = 200;
+  var users = [];
   var currentFilter = 'all';
   var currentSearch = '';
   var reviewUserId = null;
@@ -25,6 +20,18 @@
     return document.documentElement.getAttribute('data-lang') || 'my';
   }
 
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text == null ? '' : String(text);
+    return div.innerHTML;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '-';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+  }
+
   function roleBadge(role) {
     if (role === 'ADMIN') return '<span class="badge badge-gold">ADMIN</span>';
     if (role === 'PAID') return '<span class="badge badge-emerald">PAID</span>';
@@ -32,10 +39,10 @@
   }
 
   function statusBadges(u) {
-    var html = u.banned
+    var html = u.isBanned
       ? '<span class="badge badge-danger-soft"><i class="bi bi-slash-circle-fill"></i> ' + (lang() === 'en' ? 'Banned' : 'ပိတ်ပင်ထားသည်') + '</span>'
       : '<span class="badge badge-emerald"><i class="bi bi-check-circle-fill"></i> ' + (lang() === 'en' ? 'Active' : 'အသက်ဝင်နေသည်') + '</span>';
-    if (u.flagged) {
+    if (u.isFlaggedForReview) {
       html += ' <span class="badge badge-gold"><i class="bi bi-flag-fill"></i> ' + (lang() === 'en' ? 'Flagged' : 'အမှတ်အသား') + '</span>';
     }
     return html;
@@ -43,23 +50,56 @@
 
   function actionButtons(u) {
     var btns = '';
-    if (u.flagged) {
-      btns += '<button class="btn btn-outline btn-sm btn-review" data-id="' + u.id + '"><i class="bi bi-search"></i> ' +
-        (lang() === 'en' ? 'Review' : 'စစ်ဆေးရန်') + '</button> ';
+    if (u.role !== 'ADMIN') {
+      if (u.isFlaggedForReview) {
+        btns += '<button class="btn btn-outline btn-sm btn-review" data-id="' + u.id + '"><i class="bi bi-search"></i> ' +
+          (lang() === 'en' ? 'Review' : 'စစ်ဆေးရန်') + '</button> ';
+      }
+      btns += u.isBanned
+        ? '<button class="btn btn-gold btn-sm btn-toggle-ban" data-id="' + u.id + '" data-banned="true"><i class="bi bi-unlock-fill"></i> ' + (lang() === 'en' ? 'Unban' : 'ပြန်ဖွင့်မည်') + '</button>'
+        : '<button class="btn btn-danger btn-sm btn-toggle-ban" data-id="' + u.id + '" data-banned="false"><i class="bi bi-slash-circle"></i> ' + (lang() === 'en' ? 'Ban' : 'ပိတ်ပင်မည်') + '</button>';
+    } else {
+      btns = '<span style="color:var(--muted);font-size:12px;">' + (lang() === 'en' ? 'Admin account' : 'အက်ဒမင်အကောင့်') + '</span>';
     }
-    btns += u.banned
-      ? '<button class="btn btn-gold btn-sm btn-toggle-ban" data-id="' + u.id + '"><i class="bi bi-unlock-fill"></i> ' + (lang() === 'en' ? 'Unban' : 'ပြန်ဖွင့်မည်') + '</button>'
-      : '<button class="btn btn-danger btn-sm btn-toggle-ban" data-id="' + u.id + '"><i class="bi bi-slash-circle"></i> ' + (lang() === 'en' ? 'Ban' : 'ပိတ်ပင်မည်') + '</button>';
     return btns;
+  }
+
+  function loadUsers() {
+    var body = document.getElementById('usersTableBody');
+    body.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:30px;color:var(--muted);">' +
+      (lang() === 'en' ? 'Loading...' : 'တင်နေသည်...') + '</td></tr>';
+
+    window.AdminUI.authFetch('/api/v1/admin/users?size=' + PAGE_SIZE)
+      .then(function (response) { return response.ok ? response.json() : { content: [] }; })
+      .then(function (page) {
+        users = page.content || [];
+        renderStats();
+        render();
+      })
+      .catch(function () {
+        body.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:30px;color:var(--muted);">' +
+          (lang() === 'en' ? 'Failed to load users.' : 'အသုံးပြုသူများ ရယူ၍မရပါ။') + '</td></tr>';
+      });
+  }
+
+  function renderStats() {
+    var setStat = function (id, value) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+    setStat('statTotalUsersCount', users.length);
+    setStat('statPaidUsersCount', users.filter(function (u) { return u.role === 'PAID'; }).length);
+    setStat('statFlaggedUsersCount', users.filter(function (u) { return u.isFlaggedForReview; }).length);
+    setStat('statBannedUsersCount', users.filter(function (u) { return u.isBanned; }).length);
   }
 
   function render() {
     var body = document.getElementById('usersTableBody');
     var filtered = users.filter(function (u) {
       var matchesFilter = currentFilter === 'all' ||
-        (currentFilter === 'flagged' && u.flagged) ||
-        (currentFilter === 'banned' && u.banned);
-      var haystack = (u.name + ' ' + u.email).toLowerCase();
+        (currentFilter === 'flagged' && u.isFlaggedForReview) ||
+        (currentFilter === 'banned' && u.isBanned);
+      var haystack = (u.fullName + ' ' + u.email).toLowerCase();
       var matchesSearch = haystack.indexOf(currentSearch.toLowerCase()) !== -1;
       return matchesFilter && matchesSearch;
     });
@@ -74,24 +114,98 @@
     }
 
     body.innerHTML = filtered.map(function (u) {
-      var initials = u.name.charAt(0);
+      var initials = (u.fullName || u.username || '?').charAt(0);
       return (
         '<tr data-id="' + u.id + '">' +
         '<td><div class="d-flex align-items-center gap-2">' +
-        '<div class="post-avatar" style="width:34px;height:34px;font-size:12px;">' + initials + '</div>' +
-        '<span style="font-weight:600;">' + u.name + '</span></div></td>' +
-        '<td style="color:var(--muted);">' + u.email + '</td>' +
+        '<div class="post-avatar" style="width:34px;height:34px;font-size:12px;">' + escapeHtml(initials) + '</div>' +
+        '<span style="font-weight:600;">' + escapeHtml(u.fullName || u.username) + '</span></div></td>' +
+        '<td style="color:var(--muted);">' + escapeHtml(u.email) + '</td>' +
         '<td>' + roleBadge(u.role) + '</td>' +
         '<td>' + statusBadges(u) + '</td>' +
-        '<td style="color:var(--muted);">' + u.joined + '</td>' +
+        '<td style="color:var(--muted);">' + formatDate(u.createdDate) + '</td>' +
         '<td class="text-end">' + actionButtons(u) + '</td>' +
         '</tr>'
       );
     }).join('');
   }
 
+  function openReviewModal(userId) {
+    reviewUserId = userId;
+    var u = users.find(function (x) { return x.id === userId; });
+    if (!u) return;
+
+    document.getElementById('reviewUserName').textContent = u.fullName || u.username;
+    document.getElementById('reviewContent').innerHTML = '<span style="color:var(--muted);">' +
+      (lang() === 'en' ? 'Loading details...' : 'အသေးစိတ်အချက်အလက် တင်နေသည်...') + '</span>';
+    reviewModal.show();
+
+    window.AdminUI.authFetch('/api/v1/admin/users/' + userId)
+      .then(function (response) { return response.ok ? response.json() : null; })
+      .then(function (detail) {
+        if (!detail || reviewUserId !== userId) return;
+        var warningsHtml = detail.warnings && detail.warnings.length
+          ? '<ul class="mb-0 ps-3">' + detail.warnings.map(function (w) {
+              return '<li>' + escapeHtml(w.reason) + ' <span style="color:var(--muted);">(' + formatDate(w.createdAt) + ')</span></li>';
+            }).join('') + '</ul>'
+          : '<span style="color:var(--muted);">' + (lang() === 'en' ? 'No prior warnings.' : 'ယခင် သတိပေးချက် မရှိသေးပါ။') + '</span>';
+
+        document.getElementById('reviewContent').innerHTML =
+          '<div class="mb-2"><strong>' + (lang() === 'en' ? 'Batches: ' : 'ကြက်အုပ်စု: ') + '</strong>' + detail.batchCount +
+          ' &middot; <strong>' + (lang() === 'en' ? 'Sales posts: ' : 'ရောင်းရန်ပို့စ်: ') + '</strong>' + detail.salesPostCount +
+          ' &middot; <strong>' + (lang() === 'en' ? 'Buy requests: ' : 'ဝယ်လိုချက်: ') + '</strong>' + detail.buyRequestCount + '</div>' +
+          '<div class="mb-2"><strong>' + (lang() === 'en' ? 'Payments: ' : 'ငွေပေးချေမှု: ') + '</strong>' +
+          detail.paymentHistory.totalCount + ' (' + detail.paymentHistory.pendingCount + ' ' + (lang() === 'en' ? 'pending' : 'စောင့်ဆိုင်း') + ')</div>' +
+          '<div><strong>' + (lang() === 'en' ? 'Warnings:' : 'သတိပေးချက်များ:') + '</strong> ' + warningsHtml + '</div>';
+      })
+      .catch(function () {
+        document.getElementById('reviewContent').innerHTML = '<span style="color:var(--muted);">' +
+          (lang() === 'en' ? 'Failed to load details.' : 'အသေးစိတ်အချက်အလက် ရယူ၍မရပါ။') + '</span>';
+      });
+  }
+
+  function toggleBan(userId, isCurrentlyBanned) {
+    var endpoint = '/api/v1/admin/users/' + userId + (isCurrentlyBanned ? '/unban' : '/ban');
+    window.AdminUI.authFetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: isCurrentlyBanned ? undefined : JSON.stringify({})
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          window.AdminUI.toast('လုပ်ဆောင်ချက် မအောင်မြင်ပါ။', 'Action failed.', 'bi-exclamation-triangle-fill');
+          return;
+        }
+        window.AdminUI.toast(
+          isCurrentlyBanned ? 'အသုံးပြုသူကို ပြန်ဖွင့်ပေးလိုက်ပါပြီ' : 'အသုံးပြုသူကို ပိတ်ပင်လိုက်ပါပြီ',
+          isCurrentlyBanned ? 'User has been unbanned' : 'User has been banned',
+          isCurrentlyBanned ? 'bi-unlock-fill' : 'bi-slash-circle-fill'
+        );
+        loadUsers();
+      })
+      .catch(function () {
+        window.AdminUI.toast('လုပ်ဆောင်ချက် မအောင်မြင်ပါ။', 'Action failed.', 'bi-exclamation-triangle-fill');
+      });
+  }
+
+  function dismissFlag(userId) {
+    window.AdminUI.authFetch('/api/v1/admin/users/' + userId + '/dismiss-flag', { method: 'POST' })
+      .then(function (response) {
+        if (!response.ok) {
+          window.AdminUI.toast('အမှတ်အသား ဖယ်ရှား၍မရပါ။', 'Failed to clear flag.', 'bi-exclamation-triangle-fill');
+          return;
+        }
+        window.AdminUI.toast('အမှတ်အသားကို ဖယ်ရှားပြီးပါပြီ', 'Flag cleared', 'bi-check-circle-fill');
+        reviewModal.hide();
+        loadUsers();
+      })
+      .catch(function () {
+        window.AdminUI.toast('အမှတ်အသား ဖယ်ရှား၍မရပါ။', 'Failed to clear flag.', 'bi-exclamation-triangle-fill');
+      });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    render();
+    loadUsers();
 
     document.getElementById('userFilterTabs').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-filter]');
@@ -113,38 +227,22 @@
       var banBtn = e.target.closest('.btn-toggle-ban');
 
       if (reviewBtn) {
-        reviewUserId = Number(reviewBtn.getAttribute('data-id'));
-        var u = users.find(function (x) { return x.id === reviewUserId; });
-        document.getElementById('reviewUserName').textContent = u.name;
-        document.getElementById('reviewContent').textContent = u.flaggedContent || '';
-        reviewModal.show();
+        openReviewModal(Number(reviewBtn.getAttribute('data-id')));
       } else if (banBtn) {
         var id = Number(banBtn.getAttribute('data-id'));
-        var user = users.find(function (x) { return x.id === id; });
-        user.banned = !user.banned;
-        render();
-        window.AdminUI.toast(
-          user.banned ? 'အသုံးပြုသူကို ပိတ်ပင်လိုက်ပါပြီ' : 'အသုံးပြုသူကို ပြန်ဖွင့်ပေးလိုက်ပါပြီ',
-          user.banned ? 'User has been banned' : 'User has been unbanned',
-          user.banned ? 'bi-slash-circle-fill' : 'bi-unlock-fill'
-        );
+        var isCurrentlyBanned = banBtn.getAttribute('data-banned') === 'true';
+        toggleBan(id, isCurrentlyBanned);
       }
     });
 
     document.getElementById('clearFlagBtn').addEventListener('click', function () {
-      var u = users.find(function (x) { return x.id === reviewUserId; });
-      if (u) { u.flagged = false; }
-      reviewModal.hide();
-      render();
-      window.AdminUI.toast('အမှတ်အသားကို ဖယ်ရှားပြီးပါပြီ', 'Flag cleared', 'bi-check-circle-fill');
+      if (reviewUserId !== null) dismissFlag(reviewUserId);
     });
 
     document.getElementById('banFromReviewBtn').addEventListener('click', function () {
-      var u = users.find(function (x) { return x.id === reviewUserId; });
-      if (u) { u.banned = true; }
+      if (reviewUserId === null) return;
       reviewModal.hide();
-      render();
-      window.AdminUI.toast('အသုံးပြုသူကို ပိတ်ပင်လိုက်ပါပြီ', 'User has been banned', 'bi-slash-circle-fill');
+      toggleBan(reviewUserId, false);
     });
 
     document.addEventListener('adminlangchange', function (e) {

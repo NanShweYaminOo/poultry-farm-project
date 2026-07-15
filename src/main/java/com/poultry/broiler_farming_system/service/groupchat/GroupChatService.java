@@ -1,34 +1,33 @@
 package com.poultry.broiler_farming_system.service.groupchat;
 
-import com.poultry.broiler_farming_system.dto.groupchat.AddGroupChatMemberRequest;
 import com.poultry.broiler_farming_system.dto.groupchat.AdminGroupChatDetailResponse;
-import com.poultry.broiler_farming_system.dto.groupchat.AdminGroupChatSummaryResponse;
-import com.poultry.broiler_farming_system.dto.groupchat.CreateGroupChatRequest;
 import com.poultry.broiler_farming_system.dto.groupchat.GroupChatMessageResponse;
-import com.poultry.broiler_farming_system.dto.groupchat.GroupChatResponse;
+import com.poultry.broiler_farming_system.dto.groupchat.GroupChatSummaryResponse;
 import com.poultry.broiler_farming_system.dto.groupchat.SendGroupChatMessageRequest;
 
 import java.util.List;
 
-// SecurityConfig restricts every endpoint here to ROLE_PAID/ROLE_ADMIN
-// (active Farmers and Admins only, per spec). Membership is a second,
-// per-group check on top of that role gate: being PAID doesn't mean you're
-// in every group, only the ones you created or were added to.
+// There is exactly one group chat in the whole system, shared by every
+// PAID Farmer and every Admin -- not a create-your-own-group/invite-members
+// feature. SecurityConfig restricts every endpoint here to
+// ROLE_PAID/ROLE_ADMIN, so eligibility is already enforced before any of
+// these methods run; there is no further per-group membership to manage
+// beyond auto-joining the caller into that one group.
 public interface GroupChatService {
 
-    GroupChatResponse createGroup(Long creatorId, CreateGroupChatRequest request);
-
-    void addMember(Long groupChatId, Long requesterId, AddGroupChatMemberRequest request);
+    // Auto-provisions the shared group on first-ever call (owned by
+    // whichever ADMIN account happens to exist first) and auto-joins the
+    // caller into it. Idempotent -- safe to call on every page load.
+    GroupChatSummaryResponse getOrJoinSharedGroup(Long userId);
 
     // content is screened by ContentModerationService before the message is stored.
     GroupChatMessageResponse sendMessage(Long groupChatId, Long senderId, SendGroupChatMessageRequest request);
 
     List<GroupChatMessageResponse> listMessages(Long groupChatId, Long requesterId);
 
-    // Admin-only moderation views; no membership check, unlike the above.
-    List<AdminGroupChatSummaryResponse> listAllGroups();
+    // Admin-only moderation view of the shared group (auto-provisions it
+    // too, in case an admin opens this page before any farmer ever has).
+    AdminGroupChatDetailResponse getSharedGroupDetail();
 
-    AdminGroupChatDetailResponse getGroupDetail(Long groupChatId);
-
-    void deleteMessage(Long groupChatId, Long messageId);
+    void deleteMessage(Long adminId, Long messageId, String reason);
 }

@@ -19,6 +19,7 @@ import com.poultry.broiler_farming_system.repository.BatchExpenseRepository;
 import com.poultry.broiler_farming_system.repository.BatchRepository;
 import com.poultry.broiler_farming_system.repository.DailyLogRepository;
 import com.poultry.broiler_farming_system.repository.SystemConfigurationRepository;
+import com.poultry.broiler_farming_system.service.batch.BatchOwnershipGuard;
 import com.poultry.broiler_farming_system.service.inventory.InventoryService;
 import com.poultry.broiler_farming_system.service.moderation.ContentModerationService;
 import com.poultry.broiler_farming_system.service.scheduling.MedicineAlarmSchedulerService;
@@ -50,21 +51,24 @@ public class MedicineEstimationServiceImpl implements MedicineEstimationService 
     private final ContentModerationService contentModerationService;
     private final InventoryService inventoryService;
     private final MedicineAlarmSchedulerService schedulerService;
+    private final BatchOwnershipGuard batchOwnershipGuard;
 
     @Override
-    public MedicineEstimateResponse estimate(MedicineEstimateRequest request) {
+    public MedicineEstimateResponse estimate(Long callerId, MedicineEstimateRequest request) {
         requireMedicineName(request.medicineName());
         validatePositiveIfPresent(request.userPricePerUnit(), "userPricePerUnit");
         Batch batch = getBatch(request.batchId());
+        batchOwnershipGuard.requireOwnership(callerId, batch);
         requireActiveBatch(batch);
         return buildEstimate(batch, null, request.medicineName(), request.userPricePerUnit());
     }
 
     @Override
     @Transactional
-    public MedicineEstimateResponse estimateForAlarm(Long batchAlarmId, BigDecimal userPricePerUnit) {
+    public MedicineEstimateResponse estimateForAlarm(Long callerId, Long batchAlarmId, BigDecimal userPricePerUnit) {
         validatePositiveIfPresent(userPricePerUnit, "userPricePerUnit");
         BatchAlarm alarm = getAlarm(batchAlarmId);
+        batchOwnershipGuard.requireOwnership(callerId, alarm.getBatch());
         ensureNotCompleted(alarm);
         requireActiveBatch(alarm.getBatch());
 
@@ -76,8 +80,9 @@ public class MedicineEstimationServiceImpl implements MedicineEstimationService 
 
     @Override
     @Transactional
-    public MedicineTaskCompletionResponse completeTask(MedicineTaskCompletionRequest request) {
+    public MedicineTaskCompletionResponse completeTask(Long callerId, MedicineTaskCompletionRequest request) {
         BatchAlarm alarm = getAlarm(request.batchAlarmId());
+        batchOwnershipGuard.requireOwnership(callerId, alarm.getBatch());
         ensureNotCompleted(alarm);
         requireActiveBatch(alarm.getBatch());
 

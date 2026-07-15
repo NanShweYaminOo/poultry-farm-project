@@ -3,12 +3,23 @@ package com.poultry.broiler_farming_system.service.payment;
 import com.poultry.broiler_farming_system.dto.payment.CreatePaymentTransactionRequest;
 import com.poultry.broiler_farming_system.dto.payment.PaymentTransactionResponse;
 import com.poultry.broiler_farming_system.dto.payment.ReviewPaymentRequest;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface PaymentTransactionService {
 
     // Farmer uploads a payment screenshot (batch registration fee or
-    // posting-extension fee). Always lands as PENDING; review is separate.
-    PaymentTransactionResponse createTransaction(Long userId, CreatePaymentTransactionRequest request);
+    // posting-extension fee) as an image file. Always lands as PENDING;
+    // review is separate.
+    PaymentTransactionResponse createTransaction(Long userId, CreatePaymentTransactionRequest request, MultipartFile screenshot);
+
+    // The caller's own payment transactions, most recent first.
+    List<PaymentTransactionResponse> listMyTransactions(Long userId);
+
+    // Every payment transaction in the system, most recent first -- for the
+    // admin review screen.
+    List<PaymentTransactionResponse> listForAdmin();
 
     /**
      * Admin approves or rejects a pending payment screenshot. On approval,

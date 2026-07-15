@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<title>Farmer Audit Report</title>
+<style>
+  @page { size: A4; margin: 28px 32px; }
+  body { font-family: 'Noto Sans Myanmar', Helvetica, Arial, sans-serif; font-size: 11px; color: #1a1a1a; }
+  h1 { font-size: 18px; color: #1b4332; margin: 0 0 4px; }
+  .subtitle { font-size: 11px; color: #666; margin: 0 0 18px; }
+  .summary { width: 100%; border-collapse: collapse; margin-bottom: 22px; }
+  .summary td { width: 50%; padding: 12px 16px; border: 1px solid #d8d8d8; }
+  .summary .label { font-size: 10px; color: #666; text-transform: uppercase; }
+  .summary .value { font-size: 18px; font-weight: bold; color: #1b4332; margin-top: 4px; }
+  h2 { font-size: 13px; color: #1b4332; border-bottom: 1.5px solid #c9a227; padding-bottom: 4px; margin: 22px 0 8px; }
+  table.data { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  table.data th { background: #eef0ec; text-align: left; padding: 6px 8px; font-size: 9.5px; text-transform: uppercase; color: #444; border-bottom: 1px solid #ccc; }
+  table.data td { padding: 6px 8px; font-size: 10px; border-bottom: 1px solid #eee; }
+  .variance-positive { color: #b3541e; font-weight: bold; }
+  .variance-negative { color: #2d6a4f; font-weight: bold; }
+  .empty { color: #999; font-style: italic; padding: 10px 0; }
+</style>
+</head>
+<body>
+
+<h1>Farmer Financial Audit Report</h1>
+<p class="subtitle">
+  <span th:text="${farmerName}">Farmer Name</span> (<span th:text="${farmerUsername}">username</span>)
+  &mdash; generated <span th:text="${#temporals.format(generatedAt, 'yyyy-MM-dd HH:mm')}">2026-01-01 00:00</span>
+</p>
+
+<table class="summary">
+  <tr>
+    <td>
+      <div class="label">Total Approved Payments</div>
+      <div class="value" th:text="${#numbers.formatDecimal(totalPaid, 1, 2)}">0.00</div>
+    </td>
+    <td>
+      <div class="label">Total Recorded Expenses</div>
+      <div class="value" th:text="${#numbers.formatDecimal(totalExpenses, 1, 2)}">0.00</div>
+    </td>
+  </tr>
+</table>
+
+<h2>Payment History</h2>
+<table class="data" th:if="${not #lists.isEmpty(payments)}">
+  <thead>
+    <tr>
+      <th>Batch</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Amount</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="p : ${payments}">
+      <td th:text="${p.batchName}">Batch</td>
+      <td th:text="${p.paymentType}">TYPE</td>
+      <td th:text="${p.status}">STATUS</td>
+      <td th:text="${p.amount != null ? #numbers.formatDecimal(p.amount, 1, 2) : '-'}">0.00</td>
+      <td th:text="${#temporals.format(p.transactionTimestamp, 'yyyy-MM-dd HH:mm')}">date</td>
+    </tr>
+  </tbody>
+</table>
+<p class="empty" th:if="${#lists.isEmpty(payments)}">No payment transactions on record.</p>
+
+<h2>Medicine Expense Breakdown &amp; Variance</h2>
+<table class="data" th:if="${not #lists.isEmpty(expenses)}">
+  <thead>
+    <tr>
+      <th>Batch</th>
+      <th>Description</th>
+      <th>Calculated Req.</th>
+      <th>Actual Used</th>
+      <th>Variance</th>
+      <th>Cost Incurred</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="e : ${expenses}">
+      <td th:text="${e.batchName}">Batch</td>
+      <td th:text="${e.description}">Description</td>
+      <td th:text="${e.calculatedRequirement != null ? #numbers.formatDecimal(e.calculatedRequirement, 1, 2) : '-'}">-</td>
+      <td th:text="${e.overriddenQuantity != null ? #numbers.formatDecimal(e.overriddenQuantity, 1, 2) : '-'}">-</td>
+      <td th:if="${e.quantityVariance != null}"
+          th:text="${#numbers.formatDecimal(e.quantityVariance, 1, 2)}"
+          th:class="${e.quantityVariance.signum() gt 0 ? 'variance-positive' : (e.quantityVariance.signum() lt 0 ? 'variance-negative' : '')}">0.00</td>
+      <td th:if="${e.quantityVariance == null}">-</td>
+      <td th:text="${e.finalCostIncurred != null ? #numbers.formatDecimal(e.finalCostIncurred, 1, 2) : '-'}">-</td>
+      <td th:text="${#temporals.format(e.expenseDate, 'yyyy-MM-dd')}">date</td>
+    </tr>
+  </tbody>
+</table>
+<p class="empty" th:if="${#lists.isEmpty(expenses)}">No recorded expenses.</p>
+
+</body>
+</html>

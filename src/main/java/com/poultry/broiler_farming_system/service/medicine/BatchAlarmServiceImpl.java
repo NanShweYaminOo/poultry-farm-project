@@ -10,6 +10,7 @@ import com.poultry.broiler_farming_system.exception.InvalidBatchStateException;
 import com.poultry.broiler_farming_system.exception.ResourceNotFoundException;
 import com.poultry.broiler_farming_system.repository.BatchAlarmRepository;
 import com.poultry.broiler_farming_system.repository.BatchRepository;
+import com.poultry.broiler_farming_system.service.batch.BatchOwnershipGuard;
 import com.poultry.broiler_farming_system.service.scheduling.MedicineAlarmSchedulerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,10 @@ public class BatchAlarmServiceImpl implements BatchAlarmService {
     private final BatchRepository batchRepository;
     private final BatchAlarmRepository batchAlarmRepository;
     private final MedicineAlarmSchedulerService schedulerService;
+    private final BatchOwnershipGuard batchOwnershipGuard;
 
     @Override
-    public BatchAlarmResponse createAlarm(CreateBatchAlarmRequest request) {
+    public BatchAlarmResponse createAlarm(Long callerId, CreateBatchAlarmRequest request) {
         if (!StringUtils.hasText(request.medicineName())) {
             throw new IllegalArgumentException("medicineName is required.");
         }
@@ -39,6 +41,7 @@ public class BatchAlarmServiceImpl implements BatchAlarmService {
 
         Batch batch = batchRepository.findById(request.batchId())
                 .orElseThrow(() -> new ResourceNotFoundException("Batch " + request.batchId() + " was not found."));
+        batchOwnershipGuard.requireOwnership(callerId, batch);
         if (batch.getStatus() != BatchStatus.ACTIVE) {
             throw new InvalidBatchStateException(
                     "Batch " + batch.getId() + " is " + batch.getStatus() + " and is locked from further tracking; cannot schedule a new medicine alarm.");
@@ -61,9 +64,10 @@ public class BatchAlarmServiceImpl implements BatchAlarmService {
     }
 
     @Override
-    public void cancelAlarm(Long batchAlarmId) {
+    public void cancelAlarm(Long callerId, Long batchAlarmId) {
         BatchAlarm alarm = batchAlarmRepository.findById(batchAlarmId)
                 .orElseThrow(() -> new ResourceNotFoundException("Batch alarm " + batchAlarmId + " was not found."));
+        batchOwnershipGuard.requireOwnership(callerId, alarm.getBatch());
         if (Boolean.TRUE.equals(alarm.getIsCompleted())) {
             throw new InvalidAlarmStateException(
                     "Medicine task " + batchAlarmId + " has already been completed and cannot be cancelled.");
@@ -74,7 +78,11 @@ public class BatchAlarmServiceImpl implements BatchAlarmService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BatchAlarmResponse> listForBatch(Long batchId) {
+    public List<BatchAlarmResponse> listForBatch(Long callerId, Long batchId) {
+        Batch batch = batchRepository.findById(batchId)
+                .orElseThrow(() -> new ResourceNotFoundException("Batch " + batchId + " was not found."));
+        batchOwnershipGuard.requireOwnership(callerId, batch);
+
         return batchAlarmRepository.findByBatchIdOrderByScheduledTimeAsc(batchId).stream()
                 .map(this::toResponse)
                 .toList();

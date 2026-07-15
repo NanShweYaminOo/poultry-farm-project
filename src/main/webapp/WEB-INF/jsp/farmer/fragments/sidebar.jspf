@@ -1,0 +1,84 @@
+<%@ page pageEncoding="UTF-8" %>
+<aside class="sidebar" id="dashboardSidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="bi bi-egg-fried"></i></div>
+    <div>
+      <div class="brand-name">Broiler Farm</div>
+      <div class="brand-tag i18n" data-my="ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု" data-en="Poultry Farm Management">ကြက်ကြီးမွေးမြူရေး စီမံခန့်ခွဲမှု</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a class="nav-link ${currentPage == 'dashboard' ? 'active' : ''}" href="<c:url value='/farmer'/>">
+      <i class="bi bi-speedometer2"></i>
+      <span class="i18n" data-my="ဒက်ရှ်ဘုတ်" data-en="Dashboard">ဒက်ရှ်ဘုတ်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'my-batches' ? 'active' : ''}" href="<c:url value='/farmer/my-batches'/>">
+      <i class="bi bi-clipboard2-pulse"></i>
+      <span class="i18n" data-my="ကျွန်ုပ်၏ Batch များ" data-en="My Batches">ကျွန်ုပ်၏ Batch များ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'daily-log' ? 'active' : ''}" href="<c:url value='/farmer/daily-log'/>">
+      <i class="bi bi-journal-plus"></i>
+      <span class="i18n" data-my="နေ့စဉ်မှတ်တမ်း" data-en="Daily Log">နေ့စဉ်မှတ်တမ်း</span>
+    </a>
+    <a class="nav-link ${currentPage == 'alarms' ? 'active' : ''}" href="<c:url value='/farmer/alarms'/>">
+      <i class="bi bi-alarm"></i>
+      <span class="i18n" data-my="ဆေးဝါးသတိပေးချက်များ" data-en="Medicine Alarms">ဆေးဝါးသတိပေးချက်များ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'medicine-calculator' ? 'active' : ''}" href="<c:url value='/farmer/medicine-calculator'/>">
+      <i class="bi bi-calculator"></i>
+      <span class="i18n" data-my="ဆေးဝါးတွက်ချက်စက်" data-en="Medicine Calculator">ဆေးဝါးတွက်ချက်စက်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'inventory' ? 'active' : ''}" href="<c:url value='/farmer/inventory'/>">
+      <i class="bi bi-box-seam"></i>
+      <span class="i18n" data-my="လက်ကျန်ပစ္စည်း" data-en="Inventory">လက်ကျန်ပစ္စည်း</span>
+    </a>
+    <a class="nav-link ${currentPage == 'breeds' ? 'active' : ''}" href="<c:url value='/farmer/breeds'/>">
+      <i class="bi bi-egg-fried"></i>
+      <span class="i18n" data-my="ကြက်မျိုးရင်းများ" data-en="Breeds">ကြက်မျိုးရင်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'diseases' ? 'active' : ''}" href="<c:url value='/farmer/diseases'/>">
+      <i class="bi bi-virus"></i>
+      <span class="i18n" data-my="ရောဂါများ" data-en="Diseases">ရောဂါများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'faqs' ? 'active' : ''}" href="<c:url value='/farmer/faqs'/>">
+      <i class="bi bi-question-circle-fill"></i>
+      <span class="i18n" data-my="မေးလေ့ရှိသောမေးခွန်းများ" data-en="FAQs">မေးလေ့ရှိသောမေးခွန်းများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'articles' ? 'active' : ''}" href="<c:url value='/farmer/articles'/>">
+      <i class="bi bi-journal-richtext"></i>
+      <span class="i18n" data-my="ဗဟုသုတဆောင်းပါးများ" data-en="Articles">ဗဟုသုတဆောင်းပါးများ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'marketplace' ? 'active' : ''}" href="<c:url value='/farmer/marketplace'/>">
+      <i class="bi bi-shop"></i>
+      <span class="i18n" data-my="စျေးကွက်" data-en="Marketplace">စျေးကွက်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'chatbot' ? 'active' : ''}" href="<c:url value='/farmer/chatbot'/>">
+      <i class="bi bi-robot"></i>
+      <span class="i18n" data-my="AI ဆေးကုသမှုအကူအညီ" data-en="AI Chatbot">AI ဆေးကုသမှုအကူအညီ</span>
+    </a>
+    <a class="nav-link ${currentPage == 'group-chat' ? 'active' : ''}" href="<c:url value='/farmer/group-chat'/>">
+      <i class="bi bi-people-fill"></i>
+      <span class="i18n" data-my="အဖွဲ့စကားပြော" data-en="Group Chat">အဖွဲ့စကားပြော</span>
+    </a>
+    <a class="nav-link ${currentPage == 'feedback' ? 'active' : ''}" href="<c:url value='/farmer/feedback'/>">
+      <i class="bi bi-chat-square-text-fill"></i>
+      <span class="i18n" data-my="အကြံပြုချက်" data-en="Feedback">အကြံပြုချက်</span>
+    </a>
+    <a class="nav-link ${currentPage == 'premium' ? 'active' : ''}" href="<c:url value='/farmer/premium'/>" id="dashboardPremiumNavLink">
+      <i class="bi bi-gem"></i>
+      <span class="i18n" data-my="Premium နှင့် ငွေပေးချေမှု" data-en="Premium &amp; Payments">Premium &amp; Payments</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a class="nav-link ${currentPage == 'profile' ? 'active' : ''}" href="<c:url value='/farmer/profile'/>">
+      <i class="bi bi-person-circle"></i>
+      <span class="i18n" data-my="ကျွန်ုပ်၏ပရိုဖိုင်" data-en="My Profile">ကျွန်ုပ်၏ပရိုဖိုင်</span>
+    </a>
+    <a class="nav-link nav-link-logout" href="<c:url value='/login'/>">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="i18n" data-my="ထွက်မည်" data-en="Logout">ထွက်မည်</span>
+    </a>
+  </div>
+</aside>

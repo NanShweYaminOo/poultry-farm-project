@@ -10,12 +10,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/batches")
 @RequiredArgsConstructor
 public class BatchController {
 
     private final BatchService batchService;
+
+    @GetMapping
+    public List<BatchResponse> listMyBatches(@AuthenticationPrincipal UserPrincipal principal) {
+        return batchService.listMyBatches(principal.getId());
+    }
 
     // farmerId is the authenticated caller, not a request field -- see
     // CreateBatchRequest.
@@ -28,13 +35,16 @@ public class BatchController {
     }
 
     @PostMapping("/{batchId}/start")
-    public BatchResponse startBatch(@PathVariable Long batchId) {
-        return batchService.startBatch(batchId);
+    public BatchResponse startBatch(@AuthenticationPrincipal UserPrincipal principal, @PathVariable Long batchId) {
+        return batchService.startBatch(principal.getId(), batchId);
     }
 
     // e.g. { "finalStatus": "COMPLETED" } or { "finalStatus": "CANCELLED" }
     @PostMapping("/{batchId}/stop")
-    public BatchResponse stopBatch(@PathVariable Long batchId, @RequestBody StopBatchRequest request) {
-        return batchService.stopBatch(batchId, request.finalStatus());
+    public BatchResponse stopBatch(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long batchId,
+            @RequestBody StopBatchRequest request) {
+        return batchService.stopBatch(principal.getId(), batchId, request.finalStatus());
     }
 }
